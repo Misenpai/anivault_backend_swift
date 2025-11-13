@@ -15,7 +15,7 @@ final class UserController: RouteCollection {
         self.userService = userService
     }
     
-    func boot(routes: RoutesBuilder) throws {
+    func boot(routes: any RoutesBuilder) throws {
         let users = routes.grouped("users")
             .grouped(JWTAuthenticationMiddleware())
         
@@ -61,7 +61,7 @@ final class UserController: RouteCollection {
             throw Abort(.forbidden)
         }
         
-        let updateRequest = try req.content.decode(UserUpdateRequest.self)
+        let updateRequest = try req.content.decode(UserPatchRequest.self)
         return try await userService.updateUser(email: email, data: updateRequest, on: req)
     }
     
@@ -97,4 +97,3 @@ final class UserController: RouteCollection {
         return try await userService.getUsersPaginated(page: page, limit: limit, on: req)
     }
 }
-

@@ -32,10 +32,16 @@ final class User: Model, Content {
     @Timestamp(key: "last_login", on: .none)
     var lastLogin: Date?
     
+    @Field(key: "profile_image")
+    var profileImage: String?
+    
+    @Field(key: "bio")
+    var bio: String?
+    
     @Parent(key: "role_id")
     var role: Role
     
-    @Children(for: \.$user)
+    @Children(for: \.$id.$user)
     var animeStatuses: [UserAnimeStatus]
     
     init() { }

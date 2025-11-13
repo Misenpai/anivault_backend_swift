@@ -17,7 +17,7 @@ struct Constants {
     
     
     struct API {
-        static let baseURL = Environment.get("API_BASE_URL") ?? "http:
+        static let baseURL = Environment.get("API_BASE_URL") ?? "http://localhost:8080"
         static let version = "v1"
         static let prefix = "/api/\(version)"
         
@@ -154,9 +154,9 @@ struct Constants {
     
     
     struct JikanAPI {
-        static let baseURL = "https:
+        static let baseURL = "https://api.jikan.moe/v4"
         static let timeout: TimeInterval = 30
-        static let cacheExpiration: TimeInterval = TimeInterval(Environment.get("JIKAN_CACHE_TTL").flatMap(Int.init) ?? 3600) 
+        static let cacheExpiration: TimeInterval = TimeInterval(Environment.get("JIKAN_CACHE_TTL").flatMap(Int.init) ?? 3600)
         static let maxRetries = 3
         static let retryDelay: TimeInterval = 1
         
@@ -274,7 +274,7 @@ struct Constants {
     struct Validation {
         static let emailRegex = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$"
         static let usernameRegex = "^[a-zA-Z0-9_]{3,20}$"
-        static let urlRegex = "^https?:
+        static let urlRegex = "^https?://"
         static let phoneRegex = "^\\+?[1-9]\\d{1,14}$"
     }
     
@@ -326,13 +326,13 @@ struct Constants {
     
     struct ExternalServices {
         struct MAL {
-            static let baseURL = "https:
-            static let apiURL = "https:
+            static let baseURL = "https://myanimelist.net"
+            static let apiURL = "https://api.myanimelist.net/v2"
         }
         
         struct AniList {
-            static let baseURL = "https:
-            static let apiURL = "https:
+            static let baseURL = "https://anilist.co"
+            static let apiURL = "https://graphql.anilist.co"
         }
     }
     

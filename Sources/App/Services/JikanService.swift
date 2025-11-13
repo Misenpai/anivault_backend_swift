@@ -16,7 +16,7 @@ final class JikanService {
     }
     
     func getAnimeById(_ id: Int) async throws -> AnimeResponse {
-        let uri = URI(string: "\(baseURL)/anime/\id)/full")
+        let uri = URI(string: "\(baseURL)/anime/\(id)/full")
         let response = try await client.get(uri)
         return try response.content.decode(AnimeResponse.self)
     }

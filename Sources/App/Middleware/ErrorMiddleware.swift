@@ -2,7 +2,7 @@ import Vapor
 
 struct CustomErrorMiddleware: AsyncMiddleware {
 
-    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         do {
             return try await next.respond(to: request)
         } catch {
@@ -10,13 +10,13 @@ struct CustomErrorMiddleware: AsyncMiddleware {
         }
     }
 
-    private func handleError(_ error: Error, for request: Request) async throws -> Response {
+    private func handleError(_ error: any Error, for request: Request) async throws -> Response {
 
         request.logger.error("Error: \(error)")
 
         if let abort = error as? Abort {
             return try await handleAbortError(abort, for: request)
-        } else if let validationError = error as? ValidationError {
+        } else if let validationError = error as? ValidationsError {
             return try await handleValidationError(validationError, for: request)
         } else if let decodingError = error as? DecodingError {
             return try await handleDecodingError(decodingError, for: request)
@@ -38,7 +38,7 @@ struct CustomErrorMiddleware: AsyncMiddleware {
         return response
     }
 
-    private func handleValidationError(_ error: ValidationError, for request: Request) async throws
+    private func handleValidationError(_ error: ValidationsError, for request: Request) async throws
         -> Response
     {
         let response = Response(status: .badRequest)
@@ -87,7 +87,7 @@ struct CustomErrorMiddleware: AsyncMiddleware {
         return response
     }
 
-    private func handleUnknownError(_ error: Error, for request: Request) async throws -> Response {
+    private func handleUnknownError(_ error: any Error, for request: Request) async throws -> Response {
         request.logger.error("Unhandled error: \(error)")
 
         let response = Response(status: .internalServerError)

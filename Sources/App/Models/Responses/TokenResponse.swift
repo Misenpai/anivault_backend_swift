@@ -6,6 +6,7 @@
 //
 
 import Vapor
+import JWTKit
 
 struct TokenResponse: Content {
     let success: Bool
@@ -64,7 +65,8 @@ struct TokenValidationResponse: Content {
     }
 }
 
-struct JWTPayload: Content, Authenticatable {
+// JWTPayload conforming to JWTKit's protocol
+struct JWTPayload: JWTKit.JWTPayload, Authenticatable {
     let email: String
     let username: String
     let roleId: Int
@@ -79,17 +81,23 @@ struct JWTPayload: Content, Authenticatable {
         case iat
     }
     
-    func verify(using signer: JWTSigner) throws {
+    // JWTKit's verify method
+    func verify(using algorithm: some JWTAlgorithm) throws {
         try exp.verifyNotExpired()
     }
 }
 
 extension Request {
-    var bearerToken: String? {
-        guard let authorization = headers[.authorization].first,
-              authorization.hasPrefix("Bearer ") else {
-            return nil
+    // Helper to get JWT key collection from storage
+    var jwtKeys: JWTKeyCollection {
+        guard let keys = application.storage[JWTKeyCollectionStorageKey.self] else {
+            fatalError("JWTKeyCollection not configured")
         }
-        return String(authorization.dropFirst(7))
+        return keys
     }
+}
+
+// Storage key definition (should be in configure.swift or a separate file)
+struct JWTKeyCollectionStorageKey: StorageKey {
+    typealias Value = JWTKeyCollection
 }
