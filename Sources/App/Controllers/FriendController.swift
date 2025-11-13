@@ -15,7 +15,7 @@ final class FriendController: RouteCollection {
         self.friendService = friendService
     }
     
-    func boot(routes: RoutesBuilder) throws {
+    func boot(routes: any RoutesBuilder) throws {
         let friends = routes.grouped("friends")
             .grouped(JWTAuthenticationMiddleware())
         

@@ -1,28 +1,22 @@
-//
-//  Role.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 08/11/25.
-//
-
 import Fluent
 import Vapor
 
-final class Role: Model, Content {
+final class Role: Model, Content, @unchecked Sendable {
     static let schema = "roles"
     
-    @ID(custom: "role_id")
+    // ✅ FIX: Use @ID with custom key
+    @ID(custom: "role_id", generatedBy: .database)
     var id: Int?
     
     @Field(key: "role_title")
     var roleTitle: String
     
-    @Children(for: \.$role)
+    @Children(for: \.$roleId)
     var users: [User]
     
     init() { }
     
-    init(id: Int, roleTitle: String) {
+    init(id: Int? = nil, roleTitle: String) {
         self.id = id
         self.roleTitle = roleTitle
     }

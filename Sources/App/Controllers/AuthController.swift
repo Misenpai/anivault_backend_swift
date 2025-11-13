@@ -16,7 +16,7 @@ final class AuthController: RouteCollection {
         self.authService = authService
     }
     
-    func boot(routes: RoutesBuilder) throws {
+    func boot(routes: any RoutesBuilder) throws {
         let auth = routes.grouped("auth")
         
         // Public routes

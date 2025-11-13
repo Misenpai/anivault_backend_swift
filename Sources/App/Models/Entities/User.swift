@@ -1,16 +1,10 @@
-//
-//  User.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 08/11/25.
-//
-
 import Fluent
 import Vapor
 
-final class User: Model, Content {
+final class User: Model, Content, @unchecked Sendable {
     static let schema = "users"
     
+    // ✅ FIX: Use @ID with String (email as identifier)
     @ID(custom: "email", generatedBy: .user)
     var id: String?
     
@@ -32,16 +26,16 @@ final class User: Model, Content {
     @Timestamp(key: "last_login", on: .none)
     var lastLogin: Date?
     
-    @Field(key: "profile_image")
+    @OptionalField(key: "profile_image")
     var profileImage: String?
     
-    @Field(key: "bio")
+    @OptionalField(key: "bio")
     var bio: String?
     
     @Parent(key: "role_id")
     var role: Role
     
-    @Children(for: \.$user)
+    @Children(for: \.$id.$user)
     var animeStatuses: [UserAnimeStatus]
     
     init() { }
@@ -55,8 +49,9 @@ final class User: Model, Content {
     }
 }
 
+// ✅ FIX: Correct ModelAuthenticatable implementation
 extension User: ModelAuthenticatable {
-    static let usernameKey = \User.$id  // Email is the identifier
+    static let usernameKey = \User.$id
     static let passwordHashKey = \User.$passwordHash
     
     func verify(password: String) throws -> Bool {

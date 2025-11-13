@@ -20,11 +20,15 @@ struct DatabaseConfig {
     }
 
     private static func configureDatabaseURL(_ url: String, app: Application) throws {
-        guard let config = try? PostgresConfiguration(url: url) else {
+
+        guard let config = try? SQLPostgresConfiguration(url: url) else {
             throw Abort(.internalServerError, reason: "Invalid database URL")
         }
 
-        app.databases.use(.postgres(configuration: config), as: .psql)
+        app.databases.use(
+            .postgres(configuration: config),
+            as: .psql
+        )
     }
 
     private static func configureComponents(app: Application) throws {
@@ -32,33 +36,31 @@ struct DatabaseConfig {
         let port = Environment.get("DB_PORT").flatMap(Int.init) ?? 5432
         let username = Environment.get("DB_USER") ?? "postgres"
         let password = Environment.get("DB_PASSWORD") ?? ""
-        let database = Environment.get("DB_NAME") ?? "anivault"
+        let database = Environment.get("DB_NAME") ?? "postgres"
 
         var tlsConfig: TLSConfiguration?
-        if let sslMode = Environment.get("DB_SSL_MODE"), sslMode == "require" {
+        if Environment.get("DB_SSL_MODE") == "require" {
             tlsConfig = .makeClientConfiguration()
             tlsConfig?.certificateVerification = .none
         }
 
-        let config = PostgresConfiguration(
+        let config = SQLPostgresConfiguration(
             hostname: hostname,
             port: port,
             username: username,
             password: password,
             database: database,
-            tls: tlsConfig != nil ? .require(tlsConfig!) : .disable
+            tls: tlsConfig.map { .require($0) } ?? .disable
         )
 
-        app.databases.use(.postgres(configuration: config), as: .psql)
+        app.databases.use(
+            .postgres(configuration: config),
+            as: .psql
+        )
     }
 
     private static func configurePool(app: Application) {
 
-        app.databases.use(
-            .postgres(
-                maxConnectionsPerEventLoop: Constants.Database.maxConnections,
-                connectionPoolTimeout: .seconds(Int64(Constants.Database.connectionTimeout))
-            ), as: .psql)
     }
 }
 

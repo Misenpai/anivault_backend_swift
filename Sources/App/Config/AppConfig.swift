@@ -59,7 +59,7 @@ struct AppConfig {
 }
 
 struct SecurityHeadersMiddleware: Middleware {
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    func respond(to request: Request, chainingTo next: any Responder) -> EventLoopFuture<Response> {
         return next.respond(to: request).map { response in
 
             response.headers.add(name: "X-Content-Type-Options", value: "nosniff")

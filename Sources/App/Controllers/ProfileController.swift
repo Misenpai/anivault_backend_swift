@@ -15,7 +15,7 @@ final class ProfileController: RouteCollection {
         self.profileService = profileService
     }
     
-    func boot(routes: RoutesBuilder) throws {
+    func boot(routes: any RoutesBuilder) throws {
         let profile = routes.grouped("profile")
         
         // Public profile (can be viewed without auth)

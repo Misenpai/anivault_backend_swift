@@ -175,7 +175,7 @@ extension EndpointRoleAccess {
         endpoint: String,
         method: String,
         roleIds: [Int],
-        on db: Database
+        on db: any Database
     ) async throws {
         for roleId in roleIds {
             let access = EndpointRoleAccess(
@@ -191,7 +191,7 @@ extension EndpointRoleAccess {
         endpoint: String,
         method: String,
         roleIds: [Int],
-        on db: Database
+        on db: any Database
     ) async throws {
         try await EndpointRoleAccess.query(on: db)
             .filter(\.$id.$endpoint.$id == endpoint)
@@ -203,7 +203,7 @@ extension EndpointRoleAccess {
     static func getRolesWithAccess(
         endpoint: String,
         method: String,
-        on db: Database
+        on db: any Database
     ) async throws -> [Int] {
         let accesses = try await EndpointRoleAccess.query(on: db)
             .filter(\.$id.$endpoint.$id == endpoint)
@@ -217,7 +217,7 @@ extension EndpointRoleAccess {
         endpoint: String,
         method: String,
         roleId: Int,
-        on db: Database
+        on db: any Database
     ) async throws -> Bool {
         let count = try await EndpointRoleAccess.query(on: db)
             .filter(\.$id.$endpoint.$id == endpoint)
@@ -230,7 +230,7 @@ extension EndpointRoleAccess {
     
     static func getEndpointsForRole(
         roleId: Int,
-        on db: Database
+        on db: any Database
     ) async throws -> [(String, String)] {
         let accesses = try await EndpointRoleAccess.query(on: db)
             .filter(\.$id.$role.$id == roleId)
