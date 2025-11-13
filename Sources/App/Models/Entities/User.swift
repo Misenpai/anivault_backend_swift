@@ -41,7 +41,7 @@ final class User: Model, Content {
     @Parent(key: "role_id")
     var role: Role
     
-    @Children(for: \.$id.$user)
+    @Children(for: \.$user)
     var animeStatuses: [UserAnimeStatus]
     
     init() { }
@@ -56,7 +56,7 @@ final class User: Model, Content {
 }
 
 extension User: ModelAuthenticatable {
-    static let usernameKey = \User.$id
+    static let usernameKey = \User.$id  // Email is the identifier
     static let passwordHashKey = \User.$passwordHash
     
     func verify(password: String) throws -> Bool {

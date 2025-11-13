@@ -22,13 +22,14 @@ struct RoleAuthorizationMiddleware: AsyncMiddleware {
         }
 
         let endpoint = request.route?.description ?? request.url.path
-        let method = request.method.string
+        let method = request.method.rawValue
 
         let hasAccess = try await checkEndpointAccess(
             endpoint: endpoint,
             method: method,
             roleId: user.roleId,
-            on: request.db
+            on: request.db,
+            request: request
         )
 
         guard hasAccess else {
@@ -44,11 +45,18 @@ struct RoleAuthorizationMiddleware: AsyncMiddleware {
         endpoint: String,
         method: String,
         roleId: Int,
-        on db: Database
+        on db: any Database,
+        request: Request
     ) async throws -> Bool {
-
+        // Admin role_id=1 bypasses all checks
         if roleId == Constants.Role.admin.rawValue {
             return true
+        }
+
+        // Cast to PostgresDatabase
+        guard let postgres = db as? PostgresDatabase else {
+            request.logger.error("Database is not PostgreSQL")
+            return false
         }
 
         struct AccessCheck: Decodable {
@@ -59,19 +67,22 @@ struct RoleAuthorizationMiddleware: AsyncMiddleware {
             }
         }
 
-        let result = try await db.raw(
-            """
-                SELECT EXISTS (
-                    SELECT 1 
-                    FROM endpoint_role_access
-                    WHERE endpoint = \(bind: endpoint)
-                    AND method = \(bind: method)
-                    AND role_id = \(bind: roleId)
-                ) as has_access
-            """
-        ).first(decoding: AccessCheck.self)
+        let rows = try await postgres.query("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM endpoint_role_access
+                WHERE endpoint = '\(endpoint)'
+                AND method = '\(method)'
+                AND role_id = \(roleId)
+            ) as has_access
+        """).get()
 
-        return result?.hasAccess ?? false
+        guard let row = rows.first,
+              let hasAccess = try? row.decode(column: "has_access", as: Bool.self) else {
+            return false
+        }
+
+        return hasAccess
     }
 }
 

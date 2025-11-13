@@ -21,7 +21,7 @@ struct LoggingMiddleware: AsyncMiddleware {
     }
 
     private func logRequest(_ request: Request, startTime: Date) {
-        let method = request.method.string
+        let method = request.method.rawValue
         let path = request.url.path
         let clientIP = request.clientIP ?? "unknown"
         let userAgent = request.userAgent ?? "unknown"
@@ -38,7 +38,7 @@ struct LoggingMiddleware: AsyncMiddleware {
 
     private func logResponse(_ response: Response, for request: Request, startTime: Date) {
         let duration = Date().timeIntervalSince(startTime)
-        let method = request.method.string
+        let method = request.method.rawValue
         let path = request.url.path
         let status = response.status.code
         let requestID = request.requestID
@@ -55,7 +55,7 @@ struct LoggingMiddleware: AsyncMiddleware {
 
     private func logError(_ error: Error, for request: Request, startTime: Date) {
         let duration = Date().timeIntervalSince(startTime)
-        let method = request.method.string
+        let method = request.method.rawValue
         let path = request.url.path
         let requestID = request.requestID
 

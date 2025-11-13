@@ -97,11 +97,11 @@ extension Request {
     }
 
     var isJSON: Bool {
-        return headers.contentType?.mediaType == .json
+        return headers.contentType == .json  // Removed .mediaType
     }
 
     var isFormData: Bool {
-        return headers.contentType?.mediaType == .formData
+        return headers.contentType == .formData  // Removed .mediaType
     }
 
     func validateAndDecode<T: Content & Validatable>(_ type: T.Type) throws -> T {

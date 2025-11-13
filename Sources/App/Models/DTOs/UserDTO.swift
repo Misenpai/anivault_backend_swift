@@ -32,10 +32,6 @@ struct UserSummaryDTO: Content {
     let username: String
 }
 
-struct UserUpdateRequest: Content {
-    let password: String?
-    let roleId: Int?
-}
 
 struct UserPatchRequest: Content {
     let username: String?

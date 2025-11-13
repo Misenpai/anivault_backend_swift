@@ -10,7 +10,7 @@ import SMTPKitten
 import NIOCore
 
 
-final class EmailService{
+final class EmailService: @unchecked Sendable{
     private let hostname: String
     private let port: Int
     private let username: String

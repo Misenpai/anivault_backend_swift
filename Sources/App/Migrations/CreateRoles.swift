@@ -1,35 +1,38 @@
 import Fluent
+import FluentPostgresDriver
 
 struct CreateRoles: AsyncMigration {
     func prepare(on database: Database) async throws {
         try await database.schema("roles")
-            .id()
-            .field("role_id", .int, .required)
+            .field("role_id", .int, .identifier(auto: true))
             .field("role_title", .string, .required)
             .unique(on: "role_id")
             .unique(on: "role_title")
             .create()
-
-        try await database.schema("roles")
-            .createIndex(on: "role_id")
-            .createIndex(on: "role_title")
-            .update()
-
+        
+        // Create indexes using PostgreSQL
+        guard let postgres = database as? PostgresDatabase else {
+            throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
+        }
+        
+        try await postgres.query("CREATE INDEX idx_roles_role_id ON roles(role_id)").get()
+        try await postgres.query("CREATE INDEX idx_roles_title ON roles(role_title)").get()
+        
         try await seedRoles(on: database)
     }
-
+    
     func revert(on database: Database) async throws {
         try await database.schema("roles").delete()
     }
-
+    
     private func seedRoles(on database: Database) async throws {
         let roles = [
-            Role(roleId: 1, roleTitle: "admin"),
-            Role(roleId: 2, roleTitle: "user"),
-            Role(roleId: 3, roleTitle: "moderator"),
-            Role(roleId: 4, roleTitle: "guest"),
+            Role(id: 1, roleTitle: "admin"),
+            Role(id: 2, roleTitle: "user"),
+            Role(id: 3, roleTitle: "moderator"),
+            Role(id: 4, roleTitle: "guest"),
         ]
-
+        
         for role in roles {
             try await role.save(on: database)
         }

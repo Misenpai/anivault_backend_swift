@@ -11,10 +11,6 @@ import JWTKit
 import Vapor
 
 
-private struct JWTKeyCollectionStorageKey: StorageKey{
-    typealias Value = JWTKeyCollection
-}
-
 public func configure(_ app: Application) async throws {
     app.http.server.configuration.hostname = "0.0.0.0"
     app.http.server.configuration.port = Environment.get("PORT").flatMap(Int.init) ?? 8080
@@ -51,9 +47,15 @@ public func configure(_ app: Application) async throws {
 
     try routes(app)
 
-    app.migrations.add(CreateEmailVerifications())
+    // Add migrations in dependency order
+    app.migrations.add(CreateRoles())  // 1. Roles first
+    app.migrations.add(CreateUsers())  // 2. Users (depends on roles)
+    app.migrations.add(CreateEndpoints())  // 3. Endpoints
+    app.migrations.add(CreateEndpointRoleAccess())  // 4. Access (depends on endpoints & roles)
+    app.migrations.add(CreateUserAnimeStatus())  // 5. User anime (depends on users)
+    app.migrations.add(CreateEmailVerifications())  // 6. Email verifications
 
-    try await app.autoMigrate().wait()
+    try await app.autoMigrate()
 }
 
 private func configureDabase(_ app: Application) throws {
@@ -117,9 +119,6 @@ private func configureMiddleware(_ app: Application) {
     app.middleware.use(LoggingMiddleware())
 }
 
-struct EmailServiceKey: StorageKey {
-    typealias Value = EmailService
-}
 
 extension Request {
     var emailService: EmailService? {

@@ -1,4 +1,5 @@
 import Fluent
+import FluentPostgresDriver
 
 struct CreateUsers: AsyncMigration {
     func prepare(on database: Database) async throws {
@@ -14,15 +15,17 @@ struct CreateUsers: AsyncMigration {
             .unique(on: "username")
             .foreignKey("role_id", references: "roles", "role_id", onDelete: .restrict)
             .create()
-
-        try await database.schema("users")
-            .createIndex(on: "role_id")
-            .createIndex(on: "username")
-            .createIndex(on: "email_verified")
-            .createIndex(on: "created_at")
-            .update()
+        
+        // Create indexes using PostgreSQL
+        guard let postgres = database as? PostgresDatabase else {
+            throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
+        }
+        
+        try await postgres.query("CREATE INDEX idx_users_role ON users(role_id)").get()
+        try await postgres.query("CREATE INDEX idx_users_created_at ON users(created_at)").get()
+        try await postgres.query("CREATE INDEX idx_users_username ON users(username)").get()
     }
-
+    
     func revert(on database: Database) async throws {
         try await database.schema("users").delete()
     }

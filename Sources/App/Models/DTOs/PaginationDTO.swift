@@ -140,20 +140,6 @@ struct CursorPaginatedResponse<T: Content>: Content {
     }
 }
 
-extension Request {
-    var paginationRequest: PaginationRequest {
-        let page = query[Int.self, at: "page"] ?? PaginationRequest.defaultPage
-        let limit = query[Int.self, at: "limit"] ?? PaginationRequest.defaultLimit
-        return PaginationRequest(page: page, limit: limit)
-    }
-
-    var cursorPaginationRequest: CursorPaginationRequest {
-        let cursor = query[String.self, at: "cursor"]
-        let limit = query[Int.self, at: "limit"] ?? CursorPaginationRequest.defaultLimit
-        return CursorPaginationRequest(cursor: cursor, limit: limit)
-    }
-}
-
 typealias PaginatedUsersResponse = PaginatedResponse<UserDTO>
 
 typealias PaginatedAnimeResponse = PaginatedResponse<UserAnimeStatusDTO>
