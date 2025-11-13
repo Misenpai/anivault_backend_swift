@@ -1,2 +1,40 @@
-.build/
-.swiftpm/
+#Server Configuration
+PORT=8080
+HOST=0.0.0.0
+
+#Database Configuration (Supabase)
+DATABASE_URL=URL
+DB_HOST=HOST
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD= EXAMPLE_PASSWORD
+DB_NAME=postgres
+
+
+#JWT Configuration
+JWT_SECRET=EXAMPLE SECRET
+JWT_EXPIRATION=604800
+
+#Environment
+ENVIRONMENT=development
+
+
+# For Outlook/Hotmail instead:
+SMTP_HOSTNAME=smtp-mail.outlook.com
+SMTP_PORT=587
+SMTP_USERNAME=EXAMPLE.OUTLOOK.com
+SMTP_PASSWORD=EXAMPLE_PASSWORD
+SMTP_FROM_EMAIL=anivault@outlook.com
+SMTP_FROM_NAME=AniVault
+
+
+
+# File Upload
+MAX_FILE_SIZE=10485760
+UPLOAD_PATH=/var/uploads
+
+# Redis Configuration (optional, for caching)
+REDIS_URL=redis://localhost:6379
+
+# Jikan API (for caching purposes)
+JIKAN_CACHE_TTL=3600
