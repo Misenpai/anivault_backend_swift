@@ -1,10 +1,4 @@
-//
-//  PaginationDTO.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 08/11/25.
-//
-
+import Fluent
 import Vapor
 
 struct PaginatedResponse<T: Content>: Content {
@@ -19,7 +13,7 @@ struct PaginationMetadata: Content {
     let totalCount: Int
     let hasNext: Bool
     let hasPrevious: Bool
-    
+
     enum CodingKeys: String, CodingKey {
         case page
         case perPage = "per_page"
@@ -37,19 +31,18 @@ struct PaginationRequest: Content {
     static let defaultPage = 1
     static let defaultLimit = 25
     static let maxLimit = 100
-    
+
     init(page: Int? = nil, limit: Int? = nil) {
         self.page = max(page ?? Self.defaultPage, 1)
         self.limit = min(max(limit ?? Self.defaultLimit, 1), Self.maxLimit)
     }
 }
 
-
 extension Page {
-    func toPaginatedResponse<T: Content>(transform: (E) -> T) -> PaginatedResponse<T> {
+    func toPaginatedResponse<U: Content>(transform: (T) -> U) -> PaginatedResponse<U> {
         let transformedData = items.map(transform)
-        
-        let metadata = PaginationMetadata(
+
+        let paginationMetadata = PaginationMetadata(
             page: metadata.page,
             perPage: metadata.per,
             totalPages: metadata.pageCount,
@@ -57,15 +50,15 @@ extension Page {
             hasNext: metadata.page < metadata.pageCount,
             hasPrevious: metadata.page > 1
         )
-        
+
         return PaginatedResponse(
             data: transformedData,
-            pagination: metadata
+            pagination: paginationMetadata
         )
     }
-    
-    func toPaginatedResponse() -> PaginatedResponse<E> where E: Content {
-        let metadata = PaginationMetadata(
+
+    func toPaginatedResponse() -> PaginatedResponse<T> where T: Content {
+        let paginationMetadata = PaginationMetadata(
             page: metadata.page,
             perPage: metadata.per,
             totalPages: metadata.pageCount,
@@ -73,10 +66,10 @@ extension Page {
             hasNext: metadata.page < metadata.pageCount,
             hasPrevious: metadata.page > 1
         )
-        
+
         return PaginatedResponse(
             data: items,
-            pagination: metadata
+            pagination: paginationMetadata
         )
     }
 }
@@ -92,10 +85,10 @@ struct PaginationHelper {
         let totalPages = Int(ceil(Double(totalCount) / Double(perPage)))
         let startIndex = (page - 1) * perPage
         let endIndex = min(startIndex + perPage, totalCount)
-        
+
         let paginatedItems = startIndex < totalCount ? Array(items[startIndex..<endIndex]) : []
-        
-        let metadata = PaginationMetadata(
+
+        let paginationMetadata = PaginationMetadata(
             page: page,
             perPage: perPage,
             totalPages: totalPages,
@@ -103,10 +96,10 @@ struct PaginationHelper {
             hasNext: page < totalPages,
             hasPrevious: page > 1
         )
-        
+
         return PaginatedResponse(
             data: paginatedItems,
-            pagination: metadata
+            pagination: paginationMetadata
         )
     }
 
@@ -118,10 +111,10 @@ struct PaginationHelper {
 struct CursorPaginationRequest: Content {
     let cursor: String?
     let limit: Int
-    
+
     static let defaultLimit = 25
     static let maxLimit = 100
-    
+
     init(cursor: String? = nil, limit: Int? = nil) {
         self.cursor = cursor
         self.limit = min(max(limit ?? Self.defaultLimit, 1), Self.maxLimit)
@@ -132,7 +125,7 @@ struct CursorPaginatedResponse<T: Content>: Content {
     let data: [T]
     let nextCursor: String?
     let hasMore: Bool
-    
+
     enum CodingKeys: String, CodingKey {
         case data
         case nextCursor = "next_cursor"

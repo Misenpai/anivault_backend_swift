@@ -1,8 +1,9 @@
 import Fluent
 import FluentPostgresDriver
+import Vapor
 
 struct CreateEmailVerifications: AsyncMigration {
-    func prepare(on database: Database) async throws {
+    func prepare(on database: any Database) async throws {
         try await database.schema("email_verifications")
             .id()
             .field("email", .string, .required)
@@ -12,7 +13,7 @@ struct CreateEmailVerifications: AsyncMigration {
             .create()
         
         // Create indexes using PostgreSQL
-        guard let postgres = database as? PostgresDatabase else {
+        guard let postgres = database as? any PostgresDatabase else {
             throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
         }
         
@@ -27,7 +28,7 @@ struct CreateEmailVerifications: AsyncMigration {
         """).get()
     }
     
-    func revert(on database: Database) async throws {
+    func revert(on database: any Database) async throws {
         try await database.schema("email_verifications").delete()
     }
 }

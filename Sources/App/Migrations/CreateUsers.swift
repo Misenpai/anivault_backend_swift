@@ -1,8 +1,9 @@
 import Fluent
 import FluentPostgresDriver
+import Vapor
 
 struct CreateUsers: AsyncMigration {
-    func prepare(on database: Database) async throws {
+    func prepare(on database: any Database) async throws {
         try await database.schema("users")
             .field("email", .string, .identifier(auto: false))
             .field("username", .string, .required)
@@ -17,7 +18,7 @@ struct CreateUsers: AsyncMigration {
             .create()
         
         // Create indexes using PostgreSQL
-        guard let postgres = database as? PostgresDatabase else {
+        guard let postgres = database as? any PostgresDatabase else {
             throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
         }
         
@@ -26,7 +27,7 @@ struct CreateUsers: AsyncMigration {
         try await postgres.query("CREATE INDEX idx_users_username ON users(username)").get()
     }
     
-    func revert(on database: Database) async throws {
+    func revert(on database: any Database) async throws {
         try await database.schema("users").delete()
     }
 }

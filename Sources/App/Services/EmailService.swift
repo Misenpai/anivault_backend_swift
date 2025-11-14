@@ -1,6 +1,7 @@
-import Vapor
-import SMTPKitten
 import NIOCore
+import NIOPosix
+import SMTPKitten
+import Vapor
 
 final class EmailService: @unchecked Sendable {
     private let hostname: String
@@ -9,7 +10,7 @@ final class EmailService: @unchecked Sendable {
     private let password: String
     private let fromEmail: String
     private let fromName: String
-    
+
     init(
         hostname: String,
         port: Int,
@@ -25,38 +26,40 @@ final class EmailService: @unchecked Sendable {
         self.fromEmail = fromEmail
         self.fromName = fromName
     }
-    
-    func sendOTPEmail(to email: String, otp: String, on eventLoop: EventLoop) async throws {
-        // ✅ FIX: Use correct SMTPClient.connect signature
+
+    func sendOTPEmail(to email: String, otp: String, on eventLoop: any EventLoop) async throws {
+
         let client = try await SMTPClient.connect(
-            to: try .init(hostname: hostname, port: port),
             hostname: hostname,
+            port: port,
+            ssl: .startTLS(configuration: .default),
             on: eventLoop
         )
-        
+
         defer {
-            _ = client.close()
+            _ = client.sendWithoutResponse(.quit)
         }
-        
+
         try await client.login(
             user: username,
             password: password
         )
-        
-        let mail = Mail(
-            from: MailUser(name: fromName, email: fromEmail),
-            to: [MailUser(email: email)],
-            subject: "Verify Your Email - AniVault",
-            contentType: .plain,
-            text: """
+
+        let mailText = """
             Your AniVault verification code is: \(otp)
-            
+
             This code will expire in 10 minutes.
-            
+
             If you didn't create an account, please ignore this email.
             """
+
+        let mail = Mail(
+            from: MailUser(name: fromName, email: fromEmail),
+            to: [MailUser(name: "", email: email)],
+            subject: "Verify Your Email - AniVault",
+            content: .plain(mailText)
         )
-        
+
         try await client.sendMail(mail)
     }
 }

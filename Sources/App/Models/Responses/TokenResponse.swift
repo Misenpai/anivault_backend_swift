@@ -1,12 +1,5 @@
-//
-//  TokenResponse.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 08/11/25.
-//
-
-import Vapor
 import JWTKit
+import Vapor
 
 struct TokenResponse: Content {
     let success: Bool
@@ -14,7 +7,7 @@ struct TokenResponse: Content {
     let user: UserDTO
     let expiresAt: Date
     let tokenType: String
-    
+
     enum CodingKeys: String, CodingKey {
         case success
         case token
@@ -22,7 +15,7 @@ struct TokenResponse: Content {
         case expiresAt = "expires_at"
         case tokenType = "token_type"
     }
-    
+
     init(token: String, user: UserDTO, expiresAt: Date) {
         self.success = true
         self.token = token
@@ -37,14 +30,14 @@ struct RefreshTokenResponse: Content {
     let token: String
     let expiresAt: Date
     let tokenType: String
-    
+
     enum CodingKeys: String, CodingKey {
         case success
         case token
         case expiresAt = "expires_at"
         case tokenType = "token_type"
     }
-    
+
     init(token: String, expiresAt: Date) {
         self.success = true
         self.token = token
@@ -57,7 +50,7 @@ struct TokenValidationResponse: Content {
     let valid: Bool
     let expiresAt: Date?
     let user: UserDTO?
-    
+
     enum CodingKeys: String, CodingKey {
         case valid
         case expiresAt = "expires_at"
@@ -65,14 +58,13 @@ struct TokenValidationResponse: Content {
     }
 }
 
-// JWTPayload conforming to JWTKit's protocol
 struct JWTPayload: JWTKit.JWTPayload, Authenticatable {
     let email: String
     let username: String
     let roleId: Int
     let exp: ExpirationClaim
     let iat: IssuedAtClaim
-    
+
     enum CodingKeys: String, CodingKey {
         case email
         case username
@@ -80,15 +72,14 @@ struct JWTPayload: JWTKit.JWTPayload, Authenticatable {
         case exp
         case iat
     }
-    
-    // JWTKit's verify method
+
     func verify(using algorithm: some JWTAlgorithm) throws {
         try exp.verifyNotExpired()
     }
 }
 
 extension Request {
-    // Helper to get JWT key collection from storage
+
     var jwtKeys: JWTKeyCollection {
         guard let keys = application.storage[JWTKeyCollectionStorageKey.self] else {
             fatalError("JWTKeyCollection not configured")
@@ -97,7 +88,6 @@ extension Request {
     }
 }
 
-// Storage key definition (should be in configure.swift or a separate file)
 struct JWTKeyCollectionStorageKey: StorageKey {
     typealias Value = JWTKeyCollection
 }

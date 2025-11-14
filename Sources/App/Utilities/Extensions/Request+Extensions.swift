@@ -47,11 +47,13 @@ extension Request {
         return hasRole(.admin)
     }
 
-    func query<T: LosslessStringConvertible>(_ key: String, default defaultValue: T) -> T {
+    func query<T: LosslessStringConvertible & Decodable>(_ key: String, default defaultValue: T)
+        -> T
+    {
         return query[T.self, at: key] ?? defaultValue
     }
 
-    func requireQuery<T: LosslessStringConvertible>(_ key: String) throws -> T {
+    func requireQuery<T: LosslessStringConvertible & Decodable>(_ key: String) throws -> T {
         guard let value = query[T.self, at: key] else {
             throw Abort(.badRequest, reason: "Missing required query parameter: \(key)")
         }

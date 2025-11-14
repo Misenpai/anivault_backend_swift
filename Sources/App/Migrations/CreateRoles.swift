@@ -1,8 +1,9 @@
 import Fluent
 import FluentPostgresDriver
+import Vapor
 
 struct CreateRoles: AsyncMigration {
-    func prepare(on database: Database) async throws {
+    func prepare(on database: any Database) async throws {
         try await database.schema("roles")
             .field("role_id", .int, .identifier(auto: true))
             .field("role_title", .string, .required)
@@ -11,7 +12,7 @@ struct CreateRoles: AsyncMigration {
             .create()
         
         // Create indexes using PostgreSQL
-        guard let postgres = database as? PostgresDatabase else {
+        guard let postgres = database as? any PostgresDatabase else {
             throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
         }
         
@@ -21,11 +22,11 @@ struct CreateRoles: AsyncMigration {
         try await seedRoles(on: database)
     }
     
-    func revert(on database: Database) async throws {
+    func revert(on database: any Database) async throws {
         try await database.schema("roles").delete()
     }
     
-    private func seedRoles(on database: Database) async throws {
+    private func seedRoles(on database: any Database) async throws {
         let roles = [
             Role(id: 1, roleTitle: "admin"),
             Role(id: 2, roleTitle: "user"),

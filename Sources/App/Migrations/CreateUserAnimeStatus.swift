@@ -1,8 +1,9 @@
 import Fluent
 import FluentPostgresDriver
+import Vapor
 
 struct CreateUserAnimeStatus: AsyncMigration {
-    func prepare(on database: Database) async throws {
+    func prepare(on database: any Database) async throws {
         try await database.schema("user_anime_status")
             .field("user_email", .string, .required)
             .field("mal_id", .int, .required)
@@ -18,7 +19,7 @@ struct CreateUserAnimeStatus: AsyncMigration {
             .create()
         
         // Create composite key, indexes, and constraints using PostgreSQL
-        guard let postgres = database as? PostgresDatabase else {
+        guard let postgres = database as? any PostgresDatabase else {
             throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
         }
         
@@ -66,7 +67,7 @@ struct CreateUserAnimeStatus: AsyncMigration {
         """).get()
     }
     
-    func revert(on database: Database) async throws {
+    func revert(on database: any Database) async throws {
         try await database.schema("user_anime_status").delete()
     }
 }

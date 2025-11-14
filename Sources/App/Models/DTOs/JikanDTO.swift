@@ -1,13 +1,5 @@
-//
-//  JikanDTO.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 08/11/25.
-//
-
 import Vapor
 
-// Response structures matching your Android DTOs
 struct AnimeResponse: Content {
     let data: AnimeDTO
 }
@@ -21,14 +13,13 @@ struct PaginationDTO: Content {
     let lastVisiblePage: Int
     let hasNextPage: Bool
     let currentPage: Int
-    
+
     enum CodingKeys: String, CodingKey {
         case lastVisiblePage = "last_visible_page"
         case hasNextPage = "has_next_page"
         case currentPage = "current_page"
     }
 }
-
 
 struct AnimeDTO: Content {
     let malId: Int
@@ -55,7 +46,7 @@ struct AnimeDTO: Content {
     let studios: [NamedResourceDTO]?
     let genres: [NamedResourceDTO]?
     let themes: [NamedResourceDTO]?
-    
+
     enum CodingKeys: String, CodingKey {
         case malId = "mal_id"
         case url, images, title
@@ -76,7 +67,7 @@ struct ImageUrlsDTO: Content {
     let imageUrl: String
     let smallImageUrl: String?
     let largeImageUrl: String?
-    
+
     enum CodingKeys: String, CodingKey {
         case imageUrl = "image_url"
         case smallImageUrl = "small_image_url"
@@ -93,7 +84,7 @@ struct AiredDTO: Content {
 struct NamedResourceDTO: Content {
     let malId: Int
     let name: String
-    
+
     enum CodingKeys: String, CodingKey {
         case malId = "mal_id"
         case name

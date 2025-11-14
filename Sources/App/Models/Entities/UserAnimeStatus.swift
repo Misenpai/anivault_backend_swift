@@ -1,14 +1,7 @@
-//
-//  UserAnimeStatus.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 08/11/25.
-//
-
 import Fluent
 import Vapor
 
-final class UserAnimeStatus: Model, Content {
+final class UserAnimeStatus: Model, Content, @unchecked Sendable {
     static let schema = "user_anime_status"
 
     @CompositeID
@@ -17,45 +10,46 @@ final class UserAnimeStatus: Model, Content {
     @Field(key: "anime_name")
     var animeName: String
 
-    @Field(key: "total_watched_episodes")
-    var totalWatchedEpisodes: Int
+    @Field(key: "episodes_watched")
+    var episodesWatched: Int
 
     @Field(key: "total_episodes")
     var totalEpisodes: Int
 
-    @Field(key: "status")
+    @Field(key: "watch_status")
     var status: AnimeStatus
 
-    @Field(key: "score")
+    @OptionalField(key: "score")
     var score: Double?
 
-    @Field(key: "started_date")
+    @OptionalField(key: "started_watching_date")
     var startedDate: Date?
 
-    @Field(key: "completed_date")
+    @OptionalField(key: "completed_watching_date")
     var completedDate: Date?
 
-    @Timestamp(key: "updated_at", on: .update)
+    @Timestamp(key: "last_updated_at", on: .update)
     var updatedAt: Date?
 
-    init() { }
+    init() {}
 
-    init(userEmail: String, malId: Int, animeName: String, totalEpisodes: Int, status: AnimeStatus) {
+    init(userEmail: String, malId: Int, animeName: String, totalEpisodes: Int, status: AnimeStatus)
+    {
         self.id = .init(userID: userEmail, malID: malId)
         self.animeName = animeName
-        self.totalWatchedEpisodes = 0
+        self.episodesWatched = 0
         self.totalEpisodes = totalEpisodes
         self.status = status
     }
 
-    final class IDValue: Fields, Hashable {
+    final class IDValue: Fields, Hashable, @unchecked Sendable {
         @Parent(key: "user_email")
         var user: User
 
         @Field(key: "mal_id")
         var malId: Int
 
-        init() { }
+        init() {}
 
         init(userID: String, malID: Int) {
             self.$user.id = userID

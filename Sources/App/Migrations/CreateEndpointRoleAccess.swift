@@ -1,8 +1,9 @@
 import Fluent
 import FluentPostgresDriver
+import Vapor
 
 struct CreateEndpointRoleAccess: AsyncMigration {
-    func prepare(on database: Database) async throws {
+    func prepare(on database: any Database) async throws {
         try await database.schema("endpoint_role_access")
             .field("endpoint", .string, .required)
             .field("method", .string, .required)
@@ -12,7 +13,7 @@ struct CreateEndpointRoleAccess: AsyncMigration {
             .create()
         
         // Create composite key and indexes using PostgreSQL
-        guard let postgres = database as? PostgresDatabase else {
+        guard let postgres = database as? any PostgresDatabase else {
             throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
         }
         
@@ -39,7 +40,7 @@ struct CreateEndpointRoleAccess: AsyncMigration {
         """).get()
     }
     
-    func revert(on database: Database) async throws {
+    func revert(on database: any Database) async throws {
         try await database.schema("endpoint_role_access").delete()
     }
 }

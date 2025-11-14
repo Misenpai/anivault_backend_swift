@@ -1,14 +1,7 @@
-//
-//  EndpointRoleAccess.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 08/11/25.
-//
-
 import Fluent
 import Vapor
 
-final class EndpointRoleAccess: Model, Content {
+final class EndpointRoleAccess: Model, Content, @unchecked Sendable {
     static let schema = "endpoint_role_access"
 
     @CompositeID
@@ -17,7 +10,7 @@ final class EndpointRoleAccess: Model, Content {
     @Timestamp(key: "granted_at", on: .create)
     var grantedAt: Date?
 
-    init() { }
+    init() {}
 
     init(endpoint: String, method: String, roleId: Int) {
         self.id = .init(endpointID: endpoint, method: method, roleID: roleId)
@@ -27,7 +20,7 @@ final class EndpointRoleAccess: Model, Content {
         self.id = .init(endpointID: endpoint, method: method.rawValue, roleID: roleId)
     }
 
-    final class IDValue: Fields, Hashable {
+    final class IDValue: Fields, Hashable, @unchecked Sendable {
         @Parent(key: "endpoint")
         var endpoint: Endpoint
 
@@ -37,7 +30,7 @@ final class EndpointRoleAccess: Model, Content {
         @Parent(key: "role_id")
         var role: Role
 
-        init() { }
+        init() {}
 
         init(endpointID: String, method: String, roleID: Int) {
             self.$endpoint.id = endpointID
@@ -46,7 +39,8 @@ final class EndpointRoleAccess: Model, Content {
         }
 
         static func == (lhs: IDValue, rhs: IDValue) -> Bool {
-            lhs.endpoint.id == rhs.endpoint.id && lhs.method == rhs.method && lhs.role.id == rhs.role.id
+            lhs.endpoint.id == rhs.endpoint.id && lhs.method == rhs.method
+                && lhs.role.id == rhs.role.id
         }
 
         func hash(into hasher: inout Hasher) {
@@ -63,7 +57,7 @@ struct RoleAccessDTO: Content {
     let roleId: Int
     let roleTitle: String?
     let grantedAt: Date?
-    
+
     enum CodingKeys: String, CodingKey {
         case endpoint
         case method
@@ -77,23 +71,23 @@ struct AccessControlMatrixDTO: Content {
     let endpoints: [EndpointInfo]
     let roles: [RoleInfo]
     let accessMatrix: [String: [Int]]
-    
+
     struct EndpointInfo: Content {
         let endpoint: String
         let method: String
         let description: String?
     }
-    
+
     struct RoleInfo: Content {
         let roleId: Int
         let roleTitle: String
-        
+
         enum CodingKeys: String, CodingKey {
             case roleId = "role_id"
             case roleTitle = "role_title"
         }
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case endpoints
         case roles
@@ -103,12 +97,12 @@ struct AccessControlMatrixDTO: Content {
 
 struct BatchGrantAccessRequest: Content {
     let grants: [AccessGrant]
-    
+
     struct AccessGrant: Content {
         let endpoint: String
         let method: String
         let roleIds: [Int]
-        
+
         enum CodingKeys: String, CodingKey {
             case endpoint
             case method
@@ -123,7 +117,7 @@ struct BatchGrantAccessResponse: Content {
     let successful: Int
     let failed: Int
     let errors: [String]?
-    
+
     enum CodingKeys: String, CodingKey {
         case success
         case totalRequests = "total_requests"
@@ -138,12 +132,12 @@ struct RolePermissionsSummaryDTO: Content {
     let roleTitle: String
     let totalEndpoints: Int
     let permissions: [PermissionGroup]
-    
+
     struct PermissionGroup: Content {
         let category: String
         let endpoints: [String]
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case roleId = "role_id"
         case roleTitle = "role_title"
@@ -162,11 +156,11 @@ extension EndpointRoleAccess {
             grantedAt: self.grantedAt
         )
     }
-    
+
     func matches(endpoint: String, method: String, roleId: Int) -> Bool {
-        return self.id?.endpoint.id == endpoint &&
-               (self.id?.method.uppercased() ?? "") == method.uppercased() &&
-               self.id?.role.id == roleId
+        return self.id?.endpoint.id == endpoint
+            && (self.id?.method.uppercased() ?? "") == method.uppercased()
+            && self.id?.role.id == roleId
     }
 }
 
@@ -186,7 +180,7 @@ extension EndpointRoleAccess {
             try await access.save(on: db)
         }
     }
-    
+
     static func deleteForRoles(
         endpoint: String,
         method: String,
@@ -199,7 +193,7 @@ extension EndpointRoleAccess {
             .filter(\.$id.$role.$id ~~ roleIds)
             .delete()
     }
-    
+
     static func getRolesWithAccess(
         endpoint: String,
         method: String,
@@ -209,10 +203,10 @@ extension EndpointRoleAccess {
             .filter(\.$id.$endpoint.$id == endpoint)
             .filter(\.$id.$method == method)
             .all()
-        
+
         return accesses.compactMap { $0.id?.role.id }
     }
-    
+
     static func hasAccess(
         endpoint: String,
         method: String,
@@ -224,10 +218,10 @@ extension EndpointRoleAccess {
             .filter(\.$id.$method == method)
             .filter(\.$id.$role.$id == roleId)
             .count()
-        
+
         return count > 0
     }
-    
+
     static func getEndpointsForRole(
         roleId: Int,
         on db: any Database
@@ -235,7 +229,7 @@ extension EndpointRoleAccess {
         let accesses = try await EndpointRoleAccess.query(on: db)
             .filter(\.$id.$role.$id == roleId)
             .all()
-        
+
         return accesses.compactMap {
             guard let endpoint = $0.id?.endpoint.id, let method = $0.id?.method else { return nil }
             return (endpoint, method)
@@ -249,7 +243,7 @@ struct AccessGrantedResponse: Content {
     let endpoint: String
     let method: String
     let roleIds: [Int]
-    
+
     enum CodingKeys: String, CodingKey {
         case success
         case message
@@ -265,7 +259,7 @@ struct AccessRevokedResponse: Content {
     let endpoint: String
     let method: String
     let roleIds: [Int]
-    
+
     enum CodingKeys: String, CodingKey {
         case success
         case message

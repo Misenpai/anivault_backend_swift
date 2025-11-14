@@ -1,10 +1,3 @@
-//
-//  AuthService.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 09/11/25.
-//
-
 import Fluent
 import JWTKit
 import Vapor
@@ -148,7 +141,7 @@ final class AuthService {
             try await user.$role.load(on: req.db)
         }
 
-        let token = try await jwtService.generateToken(for: user)  // Now async
+        let token = try await jwtService.generateToken(for: user)
         let userDTO = try await getUserDTO(user: user, on: req)
 
         return TokenResponse(

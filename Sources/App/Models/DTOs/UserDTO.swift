@@ -1,10 +1,3 @@
-//
-//  UserDTO.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 08/11/25.
-//
-
 import Vapor
 
 struct UserDTO: Content {
@@ -16,7 +9,7 @@ struct UserDTO: Content {
     let lastLogin: Date?
 }
 
-struct UserProfileDTO: Content{
+struct UserProfileDTO: Content {
     let email: String
     let username: String
     let roleId: Int
@@ -31,7 +24,6 @@ struct UserSummaryDTO: Content {
     let email: String
     let username: String
 }
-
 
 struct UserPatchRequest: Content {
     let username: String?
@@ -63,7 +55,6 @@ struct UserAnimeStatsDTO: Content {
     let averageScore: Double?
 }
 
-
 extension User {
     func toDTO() -> UserDTO {
         return UserDTO(
@@ -75,7 +66,7 @@ extension User {
             lastLogin: self.lastLogin
         )
     }
-    
+
     func toSummaryDTO() -> UserSummaryDTO {
         return UserSummaryDTO(
             email: self.id ?? "",

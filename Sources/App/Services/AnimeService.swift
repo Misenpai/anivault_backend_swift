@@ -1,10 +1,3 @@
-//
-//  AnimeService.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 09/11/25.
-//
-
 import Fluent
 import Vapor
 
@@ -48,7 +41,7 @@ final class AnimeService {
         } else if status == .completed {
             animeStatus.startedDate = Date()
             animeStatus.completedDate = Date()
-            animeStatus.totalWatchedEpisodes = totalEpisodes
+            animeStatus.episodesWatched = totalEpisodes
         }
 
         try await animeRepository.create(animeStatus, on: db)
@@ -82,7 +75,7 @@ final class AnimeService {
                 throw Abort(.badRequest, reason: "Episodes watched cannot exceed total episodes")
             }
 
-            animeStatus.totalWatchedEpisodes = watchedEpisodes
+            animeStatus.episodesWatched = watchedEpisodes
         }
 
         if let newStatus = status {
@@ -96,7 +89,7 @@ final class AnimeService {
                 }
 
             case .completed:
-                animeStatus.totalWatchedEpisodes = animeStatus.totalEpisodes
+                animeStatus.episodesWatched = animeStatus.totalEpisodes
 
                 if animeStatus.startedDate == nil {
                     animeStatus.startedDate = Date()
@@ -111,7 +104,7 @@ final class AnimeService {
                 }
 
             case .planToWatch:
-                animeStatus.totalWatchedEpisodes = 0
+                animeStatus.episodesWatched = 0
                 animeStatus.startedDate = nil
                 animeStatus.completedDate = nil
             }

@@ -1,6 +1,8 @@
+// Sources/App/Config/DatabaseConfig.swift
 import Fluent
 import FluentPostgresDriver
 import Vapor
+import NIOSSL  // ✅ ADD THIS
 
 struct DatabaseConfig {
 
@@ -38,6 +40,7 @@ struct DatabaseConfig {
         let password = Environment.get("DB_PASSWORD") ?? ""
         let database = Environment.get("DB_NAME") ?? "postgres"
 
+        // ✅ FIX: Correct TLS configuration
         var tlsConfig: TLSConfiguration?
         if Environment.get("DB_SSL_MODE") == "require" {
             tlsConfig = .makeClientConfiguration()
@@ -50,7 +53,7 @@ struct DatabaseConfig {
             username: username,
             password: password,
             database: database,
-            tls: tlsConfig.map { .require($0) } ?? .disable
+            tls: tlsConfig.map { .prefer(try! NIOSSLContext(configuration: $0)) } ?? .disable  // ✅ FIXED
         )
 
         app.databases.use(
@@ -60,27 +63,14 @@ struct DatabaseConfig {
     }
 
     private static func configurePool(app: Application) {
-
+        // Pool configuration if needed
     }
 }
 
+// ✅ FIX: Correct middleware implementation
 struct DatabaseQueryLoggingMiddleware: AnyModelMiddleware {
-    func create(model: AnyModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void>
-    {
-        db.logger.info("Creating: \(type(of: model))")
-        return next.create(model, on: db)
-    }
-
-    func update(model: AnyModel, on db: Database, next: AnyModelResponder) -> EventLoopFuture<Void>
-    {
-        db.logger.info("Updating: \(type(of: model))")
-        return next.update(model, on: db)
-    }
-
-    func delete(model: AnyModel, force: Bool, on db: Database, next: AnyModelResponder)
-        -> EventLoopFuture<Void>
-    {
-        db.logger.info("Deleting: \(type(of: model))")
-        return next.delete(model, force: force, on: db)
+    func handle(_ event: ModelEvent, _ model: any AnyModel, on db: any Database, chainingTo next: any AnyModelResponder) -> EventLoopFuture<Void> {
+        db.logger.info("Database operation: \(event) on \(type(of: model))")
+        return next.handle(event, model, on: db)
     }
 }

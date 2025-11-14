@@ -1,33 +1,35 @@
-//
-//  FriendService.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 09/11/25.
-//
-
-import Vapor
 import Fluent
+import SQLKit
+import Vapor
 
 final class FriendService {
     func createInvite(
         creatorEmail: String,
         maxUses: Int?,
         expiresInHours: Int?,
-        on db: Database
+        on db: any Database
     ) async throws -> CreateInviteResponse {
-        let result = try await db.raw("""
-        SELECT create_friend_invite(\(bind: creatorEmail), \(bind: maxUses ?? 1), \(bind: expiresInHours)) as invite_code
-        """).first(decoding: InviteCodeResult.self)
+        guard let sql = db as? SQLDatabase else {
+            throw Abort(.internalServerError, reason: "Database doesn't support SQL")
+        }
+
+        let result = try await sql.raw(
+            """
+            SELECT create_friend_invite(\(bind: creatorEmail), \(bind: maxUses ?? 1), \(bind: expiresInHours)) as invite_code
+            """
+        ).first(decoding: InviteCodeResult.self)
 
         guard let inviteCode = result?.inviteCode else {
             throw Abort(.internalServerError, reason: "Failed to create invite")
         }
 
-        let invite = try await db.raw("""
-            SELECT max_uses, expires_at
-            FROM friend_invites
-            WHERE invite_code = \(bind: inviteCode)
-        """).first(decoding: InviteDetails.self)
+        let invite = try await sql.raw(
+            """
+                SELECT max_uses, expires_at
+                FROM friend_invites
+                WHERE invite_code = \(bind: inviteCode)
+            """
+        ).first(decoding: InviteDetails.self)
 
         return CreateInviteResponse(
             inviteCode: inviteCode,
@@ -36,10 +38,18 @@ final class FriendService {
         )
     }
 
-    func acceptInvite(inviteCode: String, accepterEmail: String, on db: Database) async throws -> String {
-        let result = try await db.raw("""
-        SELECT accept_friend_invite(\(bind: inviteCode), \(bind: accepterEmail)) as message
-        """).first(decoding: MessageResult.self)
+    func acceptInvite(inviteCode: String, accepterEmail: String, on db: any Database) async throws
+        -> String
+    {
+        guard let sql = db as? SQLDatabase else {
+            throw Abort(.internalServerError, reason: "Database doesn't support SQL")
+        }
+
+        let result = try await sql.raw(
+            """
+            SELECT accept_friend_invite(\(bind: inviteCode), \(bind: accepterEmail)) as message
+            """
+        ).first(decoding: MessageResult.self)
 
         guard let message = result?.message else {
             throw Abort(.internalServerError, reason: "Failed to accept invite")
@@ -52,7 +62,11 @@ final class FriendService {
         }
     }
 
-    func getFriends(userEmail: String, on db: Database) async throws -> [FriendDTO] {
+    func getFriends(userEmail: String, on db: any Database) async throws -> [FriendDTO] {
+        guard let sql = db as? any SQLDatabase else {
+            throw Abort(.internalServerError, reason: "Database doesn't support SQL")
+        }
+
         struct FriendRow: Decodable {
             let friendEmail: String
             let friendUsername: String
@@ -65,9 +79,11 @@ final class FriendService {
             }
         }
 
-        let friends = try await db.raw("""
-            SELECT * FROM get_user_friends(\(bind: userEmail))
-        """).all(decoding: FriendRow.self)
+        let friends = try await sql.raw(
+            """
+                SELECT * FROM get_user_friends(\(bind: userEmail))
+            """
+        ).all(decoding: FriendRow.self)
 
         return friends.map {
             FriendDTO(
@@ -78,26 +94,46 @@ final class FriendService {
         }
     }
 
-    func getFriendCount(userEmail: String, on db: Database) async throws -> Int {
-        let result = try await db.raw("""
-        SELECT total_friends FROM v_user_social_stats WHERE email = \(bind: userEmail)
-        """).first(decoding: FriendCountResult.self)
+    func getFriendCount(userEmail: String, on db: any Database) async throws -> Int {
+        guard let sql = db as? SQLDatabase else {
+            throw Abort(.internalServerError, reason: "Database doesn't support SQL")
+        }
+
+        let result = try await sql.raw(
+            """
+            SELECT total_friends FROM v_user_social_stats WHERE email = \(bind: userEmail)
+            """
+        ).first(decoding: FriendCountResult.self)
 
         return result?.totalFriends ?? 0
     }
 
-    func removeFriend(userEmail: String, friendEmail: String, on db: Database) async throws -> String {
-        let result = try await db.raw("""
-        SELECT remove_friendship(\(bind: userEmail), \(bind: friendEmail)) as message
-        """).first(decoding: MessageResult.self)
+    func removeFriend(userEmail: String, friendEmail: String, on db: any Database) async throws
+        -> String
+    {
+        guard let sql = db as? SQLDatabase else {
+            throw Abort(.internalServerError, reason: "Database doesn't support SQL")
+        }
+
+        let result = try await sql.raw(
+            """
+            SELECT remove_friendship(\(bind: userEmail), \(bind: friendEmail)) as message
+            """
+        ).first(decoding: MessageResult.self)
 
         return result?.message ?? "Failed to remove friend"
     }
 
-    func areFriends(email1: String, email2: String, on db: Database) async throws -> Bool {
-        let result = try await db.raw("""
-        SELECT are_friends(\(bind: email1), \(bind: email2)) as is_friend
-        """).first(decoding: IsFriendResult.self)
+    func areFriends(email1: String, email2: String, on db: any Database) async throws -> Bool {
+        guard let sql = db as? SQLDatabase else {
+            throw Abort(.internalServerError, reason: "Database doesn't support SQL")
+        }
+
+        let result = try await sql.raw(
+            """
+            SELECT are_friends(\(bind: email1), \(bind: email2)) as is_friend
+            """
+        ).first(decoding: IsFriendResult.self)
 
         return result?.isFriend ?? false
     }

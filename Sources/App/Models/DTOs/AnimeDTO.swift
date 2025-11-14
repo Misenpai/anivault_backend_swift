@@ -110,15 +110,13 @@ struct BulkUpdateStatusRequest: Content {
 }
 
 
-
-
 extension UserAnimeStatus {
     func toDTO() -> UserAnimeStatusDTO {
         return UserAnimeStatusDTO(
             userEmail: self.id?.user.id ?? "",
             malId: self.id?.malId ?? 0,
             animeName: self.animeName,
-            episodesWatched: self.totalWatchedEpisodes,
+            episodesWatched: self.episodesWatched,  // Changed from totalWatchedEpisodes
             totalEpisodes: self.totalEpisodes,
             status: self.status.rawValue,
             score: self.score,
@@ -129,9 +127,9 @@ extension UserAnimeStatus {
     }
     
     func toSummaryDTO() -> AnimeStatusSummaryDTO {
-        let progress = "\(totalWatchedEpisodes)/\(totalEpisodes) episodes"
+        let progress = "\(episodesWatched)/\(totalEpisodes) episodes"  // Changed
         let percentage = totalEpisodes > 0 ?
-            (Double(totalWatchedEpisodes) / Double(totalEpisodes)) * 100 : 0
+            (Double(episodesWatched) / Double(totalEpisodes)) * 100 : 0  // Changed
         
         return AnimeStatusSummaryDTO(
             malId: self.id?.malId ?? 0,

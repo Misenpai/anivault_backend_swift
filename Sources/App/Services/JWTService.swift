@@ -1,5 +1,6 @@
 import JWTKit
 import Vapor
+import Fluent
 
 final class JWTService {
     private let jwtSecret: String

@@ -1,12 +1,7 @@
-//
-//  ProfileService.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 09/11/25.
-//
-
+// Sources/App/Services/ProfileService.swift
 import Vapor
 import Fluent
+import SQLKit
 
 final class ProfileService {
     private let friendService: FriendService
@@ -18,7 +13,7 @@ final class ProfileService {
     func getPublicProfile(
         username: String,
         viewerEmail: String?,
-        on db: Database
+        on db: any Database
     ) async throws -> PublicProfileDTO {
         guard let user = try await User.query(on: db)
             .filter(\.$username == username)
@@ -44,33 +39,44 @@ final class ProfileService {
         )
     }
     
-    func getAnimeStats(userEmail: String, on db: Database) async throws -> AnimeStatsDTO {
+    func getAnimeStats(userEmail: String, on db: any Database) async throws -> AnimeStatsDTO {
+        guard let sql = db as? SQLDatabase else {
+            throw Abort(.internalServerError, reason: "Database doesn't support SQL")
+        }
+        
         struct StatsRow: Decodable {
-            let watching: Int?
-            let completed: Int?
-            let planToWatch: Int?
-            let dropped: Int?
-            let onHold: Int?
+            let totalAnimeEntries: Int?
+            let completedCount: Int?
+            let currentlyWatching: Int?
+            let planToWatchCount: Int?
+            let droppedCount: Int?
+            let onHoldCount: Int?
+            let totalEpisodesWatched: Int?
             
             enum CodingKeys: String, CodingKey {
-                case watching = "currently_watching"
-                case completed = "completed_count"
-                case planToWatch = "plan_to_watch_count"
-                case dropped = "dropped_count"
-                case onHold = "on_hold_count"
+                case totalAnimeEntries = "total_anime_entries"
+                case completedCount = "completed_count"
+                case currentlyWatching = "currently_watching"
+                case planToWatchCount = "plan_to_watch_count"
+                case droppedCount = "dropped_count"
+                case onHoldCount = "on_hold_count"
+                case totalEpisodesWatched = "total_episodes_watched"
             }
         }
         
-        let result = try await db.raw("""
+        let result = try await sql.raw("""
             SELECT * FROM v_user_anime_stats WHERE user_email = \(bind: userEmail)
         """).first(decoding: StatsRow.self)
         
         return AnimeStatsDTO(
-            watching: result?.watching ?? 0,
-            completed: result?.completed ?? 0,
-            planToWatch: result?.planToWatch ?? 0,
-            dropped: result?.dropped ?? 0,
-            onHold: result?.onHold ?? 0
+            watching: result?.currentlyWatching ?? 0,
+            completed: result?.completedCount ?? 0,
+            planToWatch: result?.planToWatchCount ?? 0,
+            dropped: result?.droppedCount ?? 0,
+            onHold: result?.onHoldCount ?? 0,
+            totalAnime: result?.totalAnimeEntries ?? 0,
+            totalEpisodesWatched: result?.totalEpisodesWatched ?? 0,
+            averageScore: nil  // Not in the view, calculate separately if needed
         )
     }
 }

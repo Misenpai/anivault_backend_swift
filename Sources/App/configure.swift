@@ -6,21 +6,20 @@ import Vapor
 public func configure(_ app: Application) async throws {
     app.http.server.configuration.hostname = Environment.get("HOST") ?? "0.0.0.0"
     app.http.server.configuration.port = Environment.get("PORT").flatMap(Int.init) ?? 8080
-    
-    // ✅ FIX: Use updated database configuration
+
     try DatabaseConfig.configure(app)
-    
+
     await configureJWT(app)
-    
-    // Email service configuration
+
     if let smtpHostname = Environment.get("SMTP_HOSTNAME"),
-       let smtpPortString = Environment.get("SMTP_PORT"),
-       let smtpPort = Int(smtpPortString),
-       let smtpUsername = Environment.get("SMTP_USERNAME"),
-       let smtpPassword = Environment.get("SMTP_PASSWORD"),
-       let smtpFromEmail = Environment.get("SMTP_FROM_EMAIL"),
-       let smtpFromName = Environment.get("SMTP_FROM_NAME") {
-        
+        let smtpPortString = Environment.get("SMTP_PORT"),
+        let smtpPort = Int(smtpPortString),
+        let smtpUsername = Environment.get("SMTP_USERNAME"),
+        let smtpPassword = Environment.get("SMTP_PASSWORD"),
+        let smtpFromEmail = Environment.get("SMTP_FROM_EMAIL"),
+        let smtpFromName = Environment.get("SMTP_FROM_NAME")
+    {
+
         let emailService = EmailService(
             hostname: smtpHostname,
             port: smtpPort,
@@ -29,29 +28,27 @@ public func configure(_ app: Application) async throws {
             fromEmail: smtpFromEmail,
             fromName: smtpFromName
         )
-        
+
         app.storage[EmailServiceKey.self] = emailService
     } else {
         app.logger.warning("SMTP not configured - email verification disabled")
     }
-    
+
     configureMiddleware(app)
-    
+
     try routes(app)
 
-    // ✅ IMPORTANT: Comment out migrations if you're using custom SQL
-    // The SQL script you provided already creates the schema
-    // try await app.autoMigrate()
+    app.logger.info("Using Supabase-managed database schema")
 }
 
 private func configureJWT(_ app: Application) async {
     guard let jwtSecret = Environment.get("JWT_SECRET") else {
         fatalError("JWT_SECRET not set in environment")
     }
-    
+
     let keys = JWTKeyCollection()
     await keys.add(hmac: HMACKey(from: jwtSecret), digestAlgorithm: .sha256)
-    
+
     app.storage[JWTKeyCollectionStorageKey.self] = keys
 }
 
