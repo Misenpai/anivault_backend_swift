@@ -22,14 +22,28 @@ struct DatabaseConfig {
 
     private static func configureDatabaseURL(_ url: String, app: Application) throws {
 
-        guard let config = try? SQLPostgresConfiguration(url: url) else {
+        guard var config = try? SQLPostgresConfiguration(url: url) else {
             throw Abort(.internalServerError, reason: "Invalid database URL")
+        }
+
+        // ✅ Configure TLS to work with Supabase
+        var tlsConfig = TLSConfiguration.makeClientConfiguration()
+        tlsConfig.certificateVerification = .none  // Disable certificate verification for Supabase
+        
+        do {
+            let sslContext = try NIOSSLContext(configuration: tlsConfig)
+            config.coreConfiguration.tls = .require(sslContext)
+        } catch {
+            app.logger.error("Failed to configure TLS: \(error)")
+            throw Abort(.internalServerError, reason: "TLS configuration failed")
         }
 
         app.databases.use(
             .postgres(configuration: config),
             as: .psql
         )
+        
+        app.logger.info("✅ Database configured with TLS")
     }
 
     private static func configureComponents(app: Application) throws {
@@ -39,11 +53,10 @@ struct DatabaseConfig {
         let password = Environment.get("DB_PASSWORD") ?? ""
         let database = Environment.get("DB_NAME") ?? "postgres"
 
-        var tlsConfig: TLSConfiguration?
-        if Environment.get("DB_SSL_MODE") == "require" {
-            tlsConfig = .makeClientConfiguration()
-            tlsConfig?.certificateVerification = .none
-        }
+        var tlsConfig = TLSConfiguration.makeClientConfiguration()
+        tlsConfig.certificateVerification = .none
+
+        let sslContext = try? NIOSSLContext(configuration: tlsConfig)
 
         let config = SQLPostgresConfiguration(
             hostname: hostname,
@@ -51,7 +64,7 @@ struct DatabaseConfig {
             username: username,
             password: password,
             database: database,
-            tls: tlsConfig.map { .prefer(try! NIOSSLContext(configuration: $0)) } ?? .disable
+            tls: sslContext.map { .require($0) } ?? .disable
         )
 
         app.databases.use(
@@ -61,7 +74,7 @@ struct DatabaseConfig {
     }
 
     private static func configurePool(app: Application) {
-
+        // Connection pool settings can be configured here if needed
     }
 }
 

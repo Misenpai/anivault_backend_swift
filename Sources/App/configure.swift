@@ -2,8 +2,20 @@ import Fluent
 import FluentPostgresDriver
 import JWTKit
 import Vapor
+import DotEnv
 
 public func configure(_ app: Application) async throws {
+    if app.environment == .development {
+        _ = DotEnv(withFile: ".env")
+        app.logger.info("✅ .env file loaded successfully")
+    }
+    if let dbURL = Environment.get("DATABASE_URL") {
+        let preview = String(dbURL.prefix(50))
+        app.logger.info("📊 DATABASE_URL loaded: \(preview)...")
+    } else {
+        app.logger.error("❌ DATABASE_URL not found in environment!")
+    }
+
     app.http.server.configuration.hostname = Environment.get("HOST") ?? "0.0.0.0"
     app.http.server.configuration.port = Environment.get("PORT").flatMap(Int.init) ?? 8080
 

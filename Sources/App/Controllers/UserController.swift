@@ -33,7 +33,7 @@ final class UserController: RouteCollection, @unchecked Sendable {
         }
 
         let requestingUser = try req.auth.require(User.self)
-        guard requestingUser.roleId == 1 || requestingUser.id == email else {
+        guard requestingUser.role.id == 1 || requestingUser.id == email else {
             throw Abort(.forbidden)
         }
 
@@ -46,7 +46,7 @@ final class UserController: RouteCollection, @unchecked Sendable {
         }
 
         let requestingUser = try req.auth.require(User.self)
-        guard requestingUser.roleId == 1 || requestingUser.id == email else {
+        guard requestingUser.role.id == 1 || requestingUser.id == email else {
             throw Abort(.forbidden)
         }
 
@@ -60,7 +60,7 @@ final class UserController: RouteCollection, @unchecked Sendable {
         }
 
         let requestingUser = try req.auth.require(User.self)
-        guard requestingUser.roleId == 1 || requestingUser.id == email else {
+        guard requestingUser.role.id == 1 || requestingUser.id == email else {
             throw Abort(.forbidden)
         }
 

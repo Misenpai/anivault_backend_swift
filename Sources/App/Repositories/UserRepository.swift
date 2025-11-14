@@ -50,7 +50,7 @@ final class UserRepository {
 
     func findByRole(_ roleId: Int, on db: any Database) async throws -> [User] {
         return try await User.query(on: db)
-            .filter(\.$roleId == roleId)
+            .filter(\.$role.$id == roleId)
             .all()
     }
 

@@ -3,7 +3,7 @@ PORT=8080
 HOST=0.0.0.0
 
 #Database Configuration (Supabase)
-DATABASE_URL=URL
+DATABASE_URL=PostgresURL
 DB_HOST=HOST
 DB_PORT=5432
 DB_USER=postgres

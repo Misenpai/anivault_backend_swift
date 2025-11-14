@@ -141,13 +141,13 @@ private func seedDevelopmentData(_ app: Application) async throws {
 
     let db = app.db
 
+    // ✅ Fixed: Use \.$role.$id instead of \.$roleId
     let adminExists =
         try await User.query(on: db)
-        .filter(\.$roleId == 1)
+        .filter(\.$role.$id == 1)
         .count() > 0
 
     if !adminExists {
-
         let adminPassword = try Bcrypt.hash("admin123")
         let admin = User(
             email: "admin@anivault.com",
@@ -166,7 +166,6 @@ private func seedDevelopmentData(_ app: Application) async throws {
         .count() > 0
 
     if !testUserExists {
-
         let testPassword = try Bcrypt.hash("test123")
         let testUser = User(
             email: "test@anivault.com",
@@ -192,7 +191,7 @@ private func logStartupStats(_ app: Application) async throws {
         .filter(\.$emailVerified == true)
         .count()
     let adminUsers = try await User.query(on: db)
-        .filter(\.$roleId == 1)
+        .filter(\.$role.$id == 1)
         .count()
 
     app.logger.info("👥 Total users: \(totalUsers)")

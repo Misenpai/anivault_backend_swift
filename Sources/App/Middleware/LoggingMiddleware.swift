@@ -155,7 +155,7 @@ struct RateLimitMiddleware: AsyncMiddleware, Sendable {
     func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response
     {
 
-        if let user = request.auth.get(User.self), user.roleId == Constants.Role.admin.rawValue {
+        if let user = request.auth.get(User.self), user.role.id == Constants.Role.admin.rawValue {
             return try await next.respond(to: request)
         }
 

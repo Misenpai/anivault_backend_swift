@@ -13,9 +13,6 @@ final class User: Model, Content, @unchecked Sendable {
     @Field(key: "password_hash")
     var passwordHash: String
 
-    @Field(key: "role_id")
-    var roleId: Int
-
     @Field(key: "email_verified")
     var emailVerified: Bool
 
@@ -31,6 +28,7 @@ final class User: Model, Content, @unchecked Sendable {
     @OptionalField(key: "bio")
     var bio: String?
 
+    // ✅ Use @Parent instead of @Field for role_id
     @Parent(key: "role_id")
     var role: Role
 
@@ -43,12 +41,17 @@ final class User: Model, Content, @unchecked Sendable {
         self.id = email
         self.username = username
         self.passwordHash = passwordHash
-        self.roleId = roleId
+        self.$role.id = roleId
         self.emailVerified = false
     }
 
     func verify(password: String) throws -> Bool {
         try Bcrypt.verify(password, created: self.passwordHash)
+    }
+    
+    // ✅ Computed property to get roleId
+    var roleId: Int {
+        return self.$role.id
     }
 }
 

@@ -13,7 +13,7 @@ struct RoleAuthorizationMiddleware: AsyncMiddleware {
             throw Abort(.unauthorized, reason: "Authentication required")
         }
 
-        guard allowedRoles.contains(where: { $0.rawValue == user.roleId }) else {
+        guard allowedRoles.contains(where: { $0.rawValue == user.role.id }) else {
             request.logger.warning("Access denied for user \(user.id ?? "unknown") with role \(user.roleId)")
             throw Abort(.forbidden, reason: "Insufficient permissions")
         }
