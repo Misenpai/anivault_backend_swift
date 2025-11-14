@@ -1,14 +1,8 @@
-//
-//  AnimeController.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 09/11/25.
-//
-
+// Sources/App/Controllers/AnimeController.swift
 import Fluent
 import Vapor
 
-final class AnimeController: RouteCollection {
+final class AnimeController: RouteCollection, @unchecked Sendable {
     private let jikanService: JikanService
     private let animeService: AnimeService
 
@@ -17,7 +11,7 @@ final class AnimeController: RouteCollection {
         self.animeService = animeService
     }
 
-    func boot(routes: RoutesBuilder) throws {
+    func boot(routes: any RoutesBuilder) throws {
         let anime = routes.grouped("anime")
 
         // Jikan proxy endpoints (public)
@@ -112,8 +106,8 @@ final class AnimeController: RouteCollection {
         return try await animeService.updateAnimeStatus(
             userEmail: user.id!,
             malId: request.malId,
-            watchedEpisodes: request.episodesWatched,  // Changed from totalWatchedEpisodes
-            status: request.status.flatMap { AnimeStatus(rawValue: $0) },  // Changed to optional unwrapping
+            watchedEpisodes: request.episodesWatched,
+            status: request.status.flatMap { AnimeStatus(rawValue: $0) },
             score: nil,
             on: req.db
         )

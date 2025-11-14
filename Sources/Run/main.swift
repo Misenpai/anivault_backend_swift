@@ -1,7 +1,6 @@
 import App
 import Vapor
 
-
 enum Main {
     static func main() async throws {
         var env = try Environment.detect()

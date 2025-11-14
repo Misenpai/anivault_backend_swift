@@ -1,7 +1,8 @@
+// Sources/App/Services/AnimeService.swift
 import Fluent
 import Vapor
 
-final class AnimeService {
+final class AnimeService: @unchecked Sendable {
     private let animeRepository: AnimeRepository
 
     init(animeRepository: AnimeRepository) {
@@ -14,13 +15,14 @@ final class AnimeService {
         animeName: String,
         totalEpisodes: Int,
         status: AnimeStatus,
-        on db: Database
+        on db: any Database
     ) async throws -> UserAnimeStatus {
-        if let existing = try await animeRepository.findByUserAndMalId(
+        // Check if anime already exists in user's list
+        if try await animeRepository.findByUserAndMalId(
             userEmail: userEmail,
             malId: malId,
             on: db
-        ) {
+        ) != nil {
             throw Abort(.conflict, reason: "Anime already in your list")
         }
 
@@ -54,7 +56,7 @@ final class AnimeService {
         watchedEpisodes: Int?,
         status: AnimeStatus?,
         score: Double?,
-        on db: Database
+        on db: any Database
     ) async throws -> UserAnimeStatus {
         guard
             let animeStatus = try await animeRepository.findByUserAndMalId(
@@ -121,7 +123,7 @@ final class AnimeService {
         return animeStatus
     }
 
-    func removeAnimeStatus(userEmail: String, malId: Int, on db: Database) async throws {
+    func removeAnimeStatus(userEmail: String, malId: Int, on db: any Database) async throws {
         guard
             let animeStatus = try await animeRepository.findByUserAndMalId(
                 userEmail: userEmail,
@@ -138,7 +140,7 @@ final class AnimeService {
     func getUserAnimeByStatus(
         userEmail: String,
         status: AnimeStatus,
-        on db: Database
+        on db: any Database
     ) async throws -> [UserAnimeStatus] {
         return try await animeRepository.findByUserAndStatus(
             userEmail: userEmail,
@@ -150,7 +152,7 @@ final class AnimeService {
     func getAnimeStatus(
         userEmail: String,
         malId: Int,
-        on db: Database
+        on db: any Database
     ) async throws -> UserAnimeStatus? {
         return try await animeRepository.findByUserAndMalId(
             userEmail: userEmail,
@@ -159,11 +161,11 @@ final class AnimeService {
         )
     }
 
-    func getAllUserAnime(userEmail: String, on db: Database) async throws -> [UserAnimeStatus] {
+    func getAllUserAnime(userEmail: String, on db: any Database) async throws -> [UserAnimeStatus] {
         return try await animeRepository.findByUser(userEmail: userEmail, on: db)
     }
 
-    func getUserAnimeStats(userEmail: String, on db: Database) async throws -> AnimeStatsDTO {
+    func getUserAnimeStats(userEmail: String, on db: any Database) async throws -> AnimeStatsDTO {
         let watching = try await animeRepository.watchingCount(userEmail: userEmail, on: db)
         let completed = try await animeRepository.completedCount(userEmail: userEmail, on: db)
         let planToWatch = try await animeRepository.planToWatchCount(userEmail: userEmail, on: db)
@@ -189,7 +191,7 @@ final class AnimeService {
     func searchUserAnime(
         userEmail: String,
         query: String,
-        on db: Database
+        on db: any Database
     ) async throws -> [UserAnimeStatus] {
         guard !query.isEmpty else {
             return try await animeRepository.findByUser(userEmail: userEmail, on: db)
@@ -205,7 +207,7 @@ final class AnimeService {
     func getRecentlyUpdated(
         userEmail: String,
         limit: Int = 10,
-        on db: Database
+        on db: any Database
     ) async throws -> [UserAnimeStatus] {
         return try await animeRepository.recentlyUpdated(
             userEmail: userEmail,
@@ -217,7 +219,7 @@ final class AnimeService {
     func getRecentlyCompleted(
         userEmail: String,
         limit: Int = 10,
-        on db: Database
+        on db: any Database
     ) async throws -> [UserAnimeStatus] {
         return try await animeRepository.recentlyCompleted(
             userEmail: userEmail,

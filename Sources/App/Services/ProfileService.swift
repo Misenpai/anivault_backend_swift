@@ -40,7 +40,7 @@ final class ProfileService {
     }
     
     func getAnimeStats(userEmail: String, on db: any Database) async throws -> AnimeStatsDTO {
-        guard let sql = db as? SQLDatabase else {
+        guard let sql = db as? any SQLDatabase else {
             throw Abort(.internalServerError, reason: "Database doesn't support SQL")
         }
         

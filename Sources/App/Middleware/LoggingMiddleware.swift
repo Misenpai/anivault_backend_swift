@@ -1,8 +1,9 @@
 import Vapor
 
-struct LoggingMiddleware: AsyncMiddleware {
+struct LoggingMiddleware: AsyncMiddleware, Sendable {
 
-    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response
+    {
         let startTime = Date()
 
         logRequest(request, startTime: startTime)
@@ -53,7 +54,7 @@ struct LoggingMiddleware: AsyncMiddleware {
             """)
     }
 
-    private func logError(_ error: Error, for request: Request, startTime: Date) {
+    private func logError(_ error: any Error, for request: Request, startTime: Date) {
         let duration = Date().timeIntervalSince(startTime)
         let method = request.method.rawValue
         let path = request.url.path
@@ -94,9 +95,10 @@ struct LoggingMiddleware: AsyncMiddleware {
     }
 }
 
-struct RequestDurationMiddleware: AsyncMiddleware {
+struct RequestDurationMiddleware: AsyncMiddleware, Sendable {
 
-    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response
+    {
         let startTime = Date()
 
         let response = try await next.respond(to: request)
@@ -108,24 +110,50 @@ struct RequestDurationMiddleware: AsyncMiddleware {
     }
 }
 
-struct RateLimitMiddleware: AsyncMiddleware {
+actor RateLimitStore {
+    private var requests: [String: [Date]] = [:]
 
-    struct RateLimitStorage {
-        var requests: [String: [Date]] = [:]
+    func addRequest(for identifier: String, at date: Date) {
+        requests[identifier, default: []].append(date)
     }
 
+    func getRequests(for identifier: String, since date: Date) -> Int {
+        guard let userRequests = requests[identifier] else { return 0 }
+
+        let recentRequests = userRequests.filter { $0 > date }
+        requests[identifier] = recentRequests
+
+        return recentRequests.count
+    }
+
+    func cleanup() {
+        let cutoff = Date().addingTimeInterval(-3600)
+        for (key, dates) in requests {
+            requests[key] = dates.filter { $0 > cutoff }
+            if requests[key]?.isEmpty ?? true {
+                requests.removeValue(forKey: key)
+            }
+        }
+    }
+}
+
+struct RateLimitMiddleware: AsyncMiddleware, Sendable {
     private let maxRequests: Int
     private let timeWindow: TimeInterval
+    private let store: RateLimitStore
 
     init(
         maxRequests: Int = Constants.API.RateLimit.maxRequests,
-        timeWindow: TimeInterval = Constants.API.RateLimit.timeWindow
+        timeWindow: TimeInterval = Constants.API.RateLimit.timeWindow,
+        store: RateLimitStore = RateLimitStore()
     ) {
         self.maxRequests = maxRequests
         self.timeWindow = timeWindow
+        self.store = store
     }
 
-    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response
+    {
 
         if let user = request.auth.get(User.self), user.roleId == Constants.Role.admin.rawValue {
             return try await next.respond(to: request)
@@ -133,15 +161,62 @@ struct RateLimitMiddleware: AsyncMiddleware {
 
         let identifier = request.clientIP ?? "unknown"
         let now = Date()
+        let windowStart = now.addingTimeInterval(-timeWindow)
+
+        let currentRequests = await store.getRequests(for: identifier, since: windowStart)
+
+        if currentRequests >= maxRequests {
+            let resetTime = now.addingTimeInterval(timeWindow)
+
+            let response = Response(status: .tooManyRequests)
+            response.headers.add(name: "X-RateLimit-Limit", value: "\(maxRequests)")
+            response.headers.add(name: "X-RateLimit-Remaining", value: "0")
+            response.headers.add(name: "X-RateLimit-Reset", value: "\(Int(resetTime.timestamp))")
+            response.headers.add(name: "Retry-After", value: "\(Int(timeWindow))")
+
+            try response.content.encode(
+                ErrorResponse(
+                    code: "RATE_LIMIT_EXCEEDED",
+                    message: "Too many requests. Please try again later.",
+                    details: "Rate limit: \(maxRequests) requests per \(Int(timeWindow)) seconds"
+                )
+            )
+
+            return response
+        }
+
+        await store.addRequest(for: identifier, at: now)
 
         let response = try await next.respond(to: request)
 
+        let remaining = maxRequests - currentRequests - 1
         response.headers.add(name: "X-RateLimit-Limit", value: "\(maxRequests)")
-        response.headers.add(name: "X-RateLimit-Remaining", value: "\(maxRequests)")
+        response.headers.add(name: "X-RateLimit-Remaining", value: "\(max(0, remaining))")
         response.headers.add(
-            name: "X-RateLimit-Reset", value: "\(Int(now.addingTimeInterval(timeWindow).timestamp))"
+            name: "X-RateLimit-Reset",
+            value: "\(Int(now.addingTimeInterval(timeWindow).timestamp))"
         )
 
         return response
+    }
+}
+
+struct RateLimitStoreKey: StorageKey {
+    typealias Value = RateLimitStore
+}
+
+extension Application {
+    var rateLimitStore: RateLimitStore {
+        get {
+            if let existing = storage[RateLimitStoreKey.self] {
+                return existing
+            }
+            let new = RateLimitStore()
+            storage[RateLimitStoreKey.self] = new
+            return new
+        }
+        set {
+            storage[RateLimitStoreKey.self] = newValue
+        }
     }
 }

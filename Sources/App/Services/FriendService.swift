@@ -9,7 +9,7 @@ final class FriendService {
         expiresInHours: Int?,
         on db: any Database
     ) async throws -> CreateInviteResponse {
-        guard let sql = db as? SQLDatabase else {
+        guard let sql = db as? any SQLDatabase else {
             throw Abort(.internalServerError, reason: "Database doesn't support SQL")
         }
 
@@ -41,7 +41,7 @@ final class FriendService {
     func acceptInvite(inviteCode: String, accepterEmail: String, on db: any Database) async throws
         -> String
     {
-        guard let sql = db as? SQLDatabase else {
+        guard let sql = db as? any SQLDatabase else {
             throw Abort(.internalServerError, reason: "Database doesn't support SQL")
         }
 
@@ -95,7 +95,7 @@ final class FriendService {
     }
 
     func getFriendCount(userEmail: String, on db: any Database) async throws -> Int {
-        guard let sql = db as? SQLDatabase else {
+        guard let sql = db as? any SQLDatabase else {
             throw Abort(.internalServerError, reason: "Database doesn't support SQL")
         }
 
@@ -111,7 +111,7 @@ final class FriendService {
     func removeFriend(userEmail: String, friendEmail: String, on db: any Database) async throws
         -> String
     {
-        guard let sql = db as? SQLDatabase else {
+        guard let sql = db as? any SQLDatabase else {
             throw Abort(.internalServerError, reason: "Database doesn't support SQL")
         }
 
@@ -125,7 +125,7 @@ final class FriendService {
     }
 
     func areFriends(email1: String, email2: String, on db: any Database) async throws -> Bool {
-        guard let sql = db as? SQLDatabase else {
+        guard let sql = db as? any SQLDatabase else {
             throw Abort(.internalServerError, reason: "Database doesn't support SQL")
         }
 

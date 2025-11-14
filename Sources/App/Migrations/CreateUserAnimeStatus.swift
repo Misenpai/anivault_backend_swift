@@ -17,56 +17,70 @@ struct CreateUserAnimeStatus: AsyncMigration {
             .field("last_updated_at", .datetime)
             .foreignKey("user_email", references: "users", "email", onDelete: .cascade)
             .create()
-        
-        // Create composite key, indexes, and constraints using PostgreSQL
+
         guard let postgres = database as? any PostgresDatabase else {
             throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
         }
-        
-        try await postgres.query("""
-            ALTER TABLE user_anime_status 
-            ADD PRIMARY KEY (user_email, mal_id)
-        """).get()
-        
-        try await postgres.query("""
-            CREATE INDEX idx_user_anime_status_user 
-            ON user_anime_status(user_email)
-        """).get()
-        
-        try await postgres.query("""
-            CREATE INDEX idx_user_anime_status_mal_id 
-            ON user_anime_status(mal_id)
-        """).get()
-        
-        try await postgres.query("""
-            CREATE INDEX idx_user_anime_status_watch_status 
-            ON user_anime_status(watch_status)
-        """).get()
-        
-        try await postgres.query("""
-            CREATE INDEX idx_user_anime_status_anime_name 
-            ON user_anime_status(anime_name)
-        """).get()
-        
-        try await postgres.query("""
-            CREATE INDEX idx_user_anime_status_updated 
-            ON user_anime_status(last_updated_at DESC)
-        """).get()
-        
-        // Add constraints
-        try await postgres.query("""
-            ALTER TABLE user_anime_status 
-            ADD CONSTRAINT valid_watch_status 
-            CHECK (watch_status IN ('Watching', 'Completed', 'PlanToWatch', 'Dropped', 'OnHold'))
-        """).get()
-        
-        try await postgres.query("""
-            ALTER TABLE user_anime_status 
-            ADD CONSTRAINT valid_episodes_count 
-            CHECK (episodes_watched >= 0 AND episodes_watched <= total_episodes)
-        """).get()
+
+        _ = try await postgres.query(
+            """
+                ALTER TABLE user_anime_status 
+                ADD PRIMARY KEY (user_email, mal_id)
+            """
+        ).get()
+
+        _ = try await postgres.query(
+            """
+                CREATE INDEX idx_user_anime_status_user 
+                ON user_anime_status(user_email)
+            """
+        ).get()
+
+        _ = try await postgres.query(
+            """
+                CREATE INDEX idx_user_anime_status_mal_id 
+                ON user_anime_status(mal_id)
+            """
+        ).get()
+
+        _ = try await postgres.query(
+            """
+                CREATE INDEX idx_user_anime_status_watch_status 
+                ON user_anime_status(watch_status)
+            """
+        ).get()
+
+        _ = try await postgres.query(
+            """
+                CREATE INDEX idx_user_anime_status_anime_name 
+                ON user_anime_status(anime_name)
+            """
+        ).get()
+
+        _ = try await postgres.query(
+            """
+                CREATE INDEX idx_user_anime_status_updated 
+                ON user_anime_status(last_updated_at DESC)
+            """
+        ).get()
+
+        _ = try await postgres.query(
+            """
+                ALTER TABLE user_anime_status 
+                ADD CONSTRAINT valid_watch_status 
+                CHECK (watch_status IN ('Watching', 'Completed', 'PlanToWatch', 'Dropped', 'OnHold'))
+            """
+        ).get()
+
+        _ = try await postgres.query(
+            """
+                ALTER TABLE user_anime_status 
+                ADD CONSTRAINT valid_episodes_count 
+                CHECK (episodes_watched >= 0 AND episodes_watched <= total_episodes)
+            """
+        ).get()
     }
-    
+
     func revert(on database: any Database) async throws {
         try await database.schema("user_anime_status").delete()
     }

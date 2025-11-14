@@ -1,6 +1,5 @@
-// Sources/App/Models/Entities/User.swift
-import Vapor
 import Fluent
+import Vapor
 
 final class User: Model, Content, @unchecked Sendable {
     static let schema = "users"
@@ -47,14 +46,10 @@ final class User: Model, Content, @unchecked Sendable {
         self.roleId = roleId
         self.emailVerified = false
     }
-}
-
-// ✅ FIX: Use $id for authentication since email is the ID
-extension User: ModelAuthenticatable {
-    static let usernameKey = \User.$id  // Email is used for authentication
-    static let passwordHashKey = \User.$passwordHash
 
     func verify(password: String) throws -> Bool {
         try Bcrypt.verify(password, created: self.passwordHash)
     }
 }
+
+extension User: Authenticatable {}

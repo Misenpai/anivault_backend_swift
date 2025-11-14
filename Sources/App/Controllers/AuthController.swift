@@ -1,15 +1,9 @@
-//
-//  AuthController.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 09/11/25.
-//
-
+// Sources/App/Controllers/AuthController.swift
 import Vapor
 import JWTKit
 import Fluent
 
-final class AuthController: RouteCollection {
+final class AuthController: RouteCollection, @unchecked Sendable {
     private let authService: AuthService
     
     init(authService: AuthService) {
@@ -22,6 +16,7 @@ final class AuthController: RouteCollection {
         // Public routes
         auth.post("signup", use: signup)
         auth.post("login", use: login)
+        auth.post("refresh", use: refreshToken)
         auth.post("verify-email", use: sendVerificationCode)
         auth.post("verify-code", use: verifyCode)
         
@@ -29,7 +24,7 @@ final class AuthController: RouteCollection {
         let protected = auth.grouped(JWTAuthenticationMiddleware())
         protected.get("me", use: getCurrentUser)
         protected.put("username", use: updateUsername)
-        protected.post("refresh", use: refreshToken)
+        protected.post("logout", use: logout)
     }
     
     private func signup(req: Request) async throws -> TokenResponse {
@@ -48,10 +43,24 @@ final class AuthController: RouteCollection {
         let loginRequest = try req.content.decode(LoginRequest.self)
         
         return try await authService.login(
-            email: loginRequest.email,
+            identifier: loginRequest.identifier,
             password: loginRequest.password,
             on: req
         )
+    }
+    
+    private func refreshToken(req: Request) async throws -> RefreshTokenResponse {
+        let request = try req.content.decode(RefreshTokenRequest.self)
+        return try await authService.refreshAccessToken(
+            refreshToken: request.refreshToken,
+            on: req
+        )
+    }
+    
+    private func logout(req: Request) async throws -> HTTPStatus {
+        let request = try req.content.decode(LogoutRequest.self)
+        try await authService.logout(refreshToken: request.refreshToken, on: req)
+        return .ok
     }
     
     private func sendVerificationCode(req: Request) async throws -> HTTPStatus {
@@ -84,10 +93,5 @@ final class AuthController: RouteCollection {
     private func getCurrentUser(req: Request) async throws -> UserDTO {
         let user = try req.auth.require(User.self)
         return try await authService.getUserDTO(user: user, on: req)
-    }
-    
-    private func refreshToken(req: Request) async throws -> TokenResponse {
-        let user = try req.auth.require(User.self)
-        return try await authService.generateToken(for: user, on: req)
     }
 }

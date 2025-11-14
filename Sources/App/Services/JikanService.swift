@@ -1,17 +1,10 @@
-//
-//  JikanService.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 09/11/25.
-//
-
 import Vapor
 
 final class JikanService {
-    private let client: Client
+    private let client: any Client
     private let baseURL = "https://api.jikan.moe/v4"
     
-    init(client: Client) {
+    init(client: any Client) {
         self.client = client
     }
     

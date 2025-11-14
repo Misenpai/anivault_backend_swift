@@ -1,3 +1,4 @@
+// Sources/App/Migrations/CreateEmailVerifications.swift
 import Fluent
 import FluentPostgresDriver
 import Vapor
@@ -17,12 +18,12 @@ struct CreateEmailVerifications: AsyncMigration {
             throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
         }
         
-        try await postgres.query("""
+        _ = try await postgres.query("""
             CREATE INDEX idx_email_verifications_email 
             ON email_verifications(email)
         """).get()
         
-        try await postgres.query("""
+        _ = try await postgres.query("""
             CREATE INDEX idx_email_verifications_code 
             ON email_verifications(code)
         """).get()

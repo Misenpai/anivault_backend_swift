@@ -16,17 +16,16 @@ struct CreateUsers: AsyncMigration {
             .unique(on: "username")
             .foreignKey("role_id", references: "roles", "role_id", onDelete: .restrict)
             .create()
-        
-        // Create indexes using PostgreSQL
+
         guard let postgres = database as? any PostgresDatabase else {
             throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
         }
-        
-        try await postgres.query("CREATE INDEX idx_users_role ON users(role_id)").get()
-        try await postgres.query("CREATE INDEX idx_users_created_at ON users(created_at)").get()
-        try await postgres.query("CREATE INDEX idx_users_username ON users(username)").get()
+
+        _ = try await postgres.query("CREATE INDEX idx_users_role ON users(role_id)").get()
+        _ = try await postgres.query("CREATE INDEX idx_users_created_at ON users(created_at)").get()
+        _ = try await postgres.query("CREATE INDEX idx_users_username ON users(username)").get()
     }
-    
+
     func revert(on database: any Database) async throws {
         try await database.schema("users").delete()
     }

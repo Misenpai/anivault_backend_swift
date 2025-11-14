@@ -8,7 +8,7 @@ struct RoleAuthorizationMiddleware: AsyncMiddleware {
         self.allowedRoles = allowedRoles
     }
 
-    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         guard let user = request.auth.get(User.self) else {
             throw Abort(.unauthorized, reason: "Authentication required")
         }
@@ -40,7 +40,7 @@ struct RoleAuthorizationMiddleware: AsyncMiddleware {
         endpoint: String,
         method: String,
         roleId: Int,
-        on db: Database
+        on db: any Database
     ) async throws -> Bool {
         // Admin role_id=1 bypasses all checks
         if roleId == Constants.Role.admin.rawValue {

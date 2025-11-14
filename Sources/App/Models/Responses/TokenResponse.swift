@@ -1,24 +1,28 @@
+// Sources/App/Models/Responses/TokenResponse.swift
 import JWTKit
 import Vapor
 
 struct TokenResponse: Content {
     let success: Bool
-    let token: String
+    let accessToken: String
+    let refreshToken: String
     let user: UserDTO
     let expiresAt: Date
     let tokenType: String
 
     enum CodingKeys: String, CodingKey {
         case success
-        case token
+        case accessToken = "access_token"
+        case refreshToken = "refresh_token"
         case user
         case expiresAt = "expires_at"
         case tokenType = "token_type"
     }
 
-    init(token: String, user: UserDTO, expiresAt: Date) {
+    init(accessToken: String, refreshToken: String, user: UserDTO, expiresAt: Date) {
         self.success = true
-        self.token = token
+        self.accessToken = accessToken
+        self.refreshToken = refreshToken
         self.user = user
         self.expiresAt = expiresAt
         self.tokenType = "Bearer"
@@ -27,20 +31,23 @@ struct TokenResponse: Content {
 
 struct RefreshTokenResponse: Content {
     let success: Bool
-    let token: String
+    let accessToken: String
+    let refreshToken: String
     let expiresAt: Date
     let tokenType: String
 
     enum CodingKeys: String, CodingKey {
         case success
-        case token
+        case accessToken = "access_token"
+        case refreshToken = "refresh_token"
         case expiresAt = "expires_at"
         case tokenType = "token_type"
     }
 
-    init(token: String, expiresAt: Date) {
+    init(accessToken: String, refreshToken: String, expiresAt: Date) {
         self.success = true
-        self.token = token
+        self.accessToken = accessToken
+        self.refreshToken = refreshToken
         self.expiresAt = expiresAt
         self.tokenType = "Bearer"
     }
@@ -79,7 +86,6 @@ struct JWTPayload: JWTKit.JWTPayload, Authenticatable {
 }
 
 extension Request {
-
     var jwtKeys: JWTKeyCollection {
         guard let keys = application.storage[JWTKeyCollectionStorageKey.self] else {
             fatalError("JWTKeyCollection not configured")

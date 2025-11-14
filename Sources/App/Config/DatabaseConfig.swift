@@ -1,8 +1,7 @@
-// Sources/App/Config/DatabaseConfig.swift
 import Fluent
 import FluentPostgresDriver
+import NIOSSL
 import Vapor
-import NIOSSL  // ✅ ADD THIS
 
 struct DatabaseConfig {
 
@@ -40,7 +39,6 @@ struct DatabaseConfig {
         let password = Environment.get("DB_PASSWORD") ?? ""
         let database = Environment.get("DB_NAME") ?? "postgres"
 
-        // ✅ FIX: Correct TLS configuration
         var tlsConfig: TLSConfiguration?
         if Environment.get("DB_SSL_MODE") == "require" {
             tlsConfig = .makeClientConfiguration()
@@ -53,7 +51,7 @@ struct DatabaseConfig {
             username: username,
             password: password,
             database: database,
-            tls: tlsConfig.map { .prefer(try! NIOSSLContext(configuration: $0)) } ?? .disable  // ✅ FIXED
+            tls: tlsConfig.map { .prefer(try! NIOSSLContext(configuration: $0)) } ?? .disable
         )
 
         app.databases.use(
@@ -63,13 +61,15 @@ struct DatabaseConfig {
     }
 
     private static func configurePool(app: Application) {
-        // Pool configuration if needed
+
     }
 }
 
-// ✅ FIX: Correct middleware implementation
 struct DatabaseQueryLoggingMiddleware: AnyModelMiddleware {
-    func handle(_ event: ModelEvent, _ model: any AnyModel, on db: any Database, chainingTo next: any AnyModelResponder) -> EventLoopFuture<Void> {
+    func handle(
+        _ event: ModelEvent, _ model: any AnyModel, on db: any Database,
+        chainingTo next: any AnyModelResponder
+    ) -> EventLoopFuture<Void> {
         db.logger.info("Database operation: \(event) on \(type(of: model))")
         return next.handle(event, model, on: db)
     }

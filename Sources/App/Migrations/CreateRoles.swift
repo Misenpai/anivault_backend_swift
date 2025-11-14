@@ -11,13 +11,12 @@ struct CreateRoles: AsyncMigration {
             .unique(on: "role_title")
             .create()
         
-        // Create indexes using PostgreSQL
         guard let postgres = database as? any PostgresDatabase else {
             throw Abort(.internalServerError, reason: "Database is not PostgreSQL")
         }
         
-        try await postgres.query("CREATE INDEX idx_roles_role_id ON roles(role_id)").get()
-        try await postgres.query("CREATE INDEX idx_roles_title ON roles(role_title)").get()
+        _ = try await postgres.query("CREATE INDEX idx_roles_role_id ON roles(role_id)").get()
+        _ = try await postgres.query("CREATE INDEX idx_roles_title ON roles(role_title)").get()
         
         try await seedRoles(on: database)
     }

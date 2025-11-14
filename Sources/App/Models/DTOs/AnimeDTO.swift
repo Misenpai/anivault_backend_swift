@@ -1,10 +1,3 @@
-//
-//  AnimeDTO.swift
-//  anivault_backend
-//
-//  Created by Sumit Sinha on 08/11/25.
-//
-
 import Vapor
 
 struct UserAnimeStatusDTO: Content {
@@ -18,7 +11,7 @@ struct UserAnimeStatusDTO: Content {
     let startedDate: Date?
     let completedDate: Date?
     let lastUpdated: Date?
-    
+
     enum CodingKeys: String, CodingKey {
         case userEmail = "user_email"
         case malId = "mal_id"
@@ -38,7 +31,7 @@ struct AddAnimeStatusRequest: Content {
     let animeName: String
     let totalEpisodes: Int
     let status: String
-    
+
     enum CodingKeys: String, CodingKey {
         case malId = "mal_id"
         case animeName = "anime_name"
@@ -52,7 +45,7 @@ struct UpdateAnimeStatusRequest: Content {
     let episodesWatched: Int?
     let status: String?
     let score: Double?
-    
+
     enum CodingKeys: String, CodingKey {
         case malId = "mal_id"
         case episodesWatched = "episodes_watched"
@@ -65,9 +58,9 @@ struct AnimeStatusSummaryDTO: Content {
     let malId: Int
     let animeName: String
     let status: String
-    let progress: String // "5/12 episodes"
-    let progressPercentage: Double // 41.67
-    
+    let progress: String
+    let progressPercentage: Double
+
     enum CodingKeys: String, CodingKey {
         case malId = "mal_id"
         case animeName = "anime_name"
@@ -86,7 +79,7 @@ struct AnimeStatsDTO: Content {
     let totalAnime: Int
     let totalEpisodesWatched: Int
     let averageScore: Double?
-    
+
     enum CodingKeys: String, CodingKey {
         case watching
         case completed
@@ -102,13 +95,12 @@ struct AnimeStatsDTO: Content {
 struct BulkUpdateStatusRequest: Content {
     let malIds: [Int]
     let status: String
-    
+
     enum CodingKeys: String, CodingKey {
         case malIds = "mal_ids"
         case status
     }
 }
-
 
 extension UserAnimeStatus {
     func toDTO() -> UserAnimeStatusDTO {
@@ -116,7 +108,7 @@ extension UserAnimeStatus {
             userEmail: self.id?.user.id ?? "",
             malId: self.id?.malId ?? 0,
             animeName: self.animeName,
-            episodesWatched: self.episodesWatched,  // Changed from totalWatchedEpisodes
+            episodesWatched: self.episodesWatched,
             totalEpisodes: self.totalEpisodes,
             status: self.status.rawValue,
             score: self.score,
@@ -125,12 +117,12 @@ extension UserAnimeStatus {
             lastUpdated: self.updatedAt
         )
     }
-    
+
     func toSummaryDTO() -> AnimeStatusSummaryDTO {
-        let progress = "\(episodesWatched)/\(totalEpisodes) episodes"  // Changed
-        let percentage = totalEpisodes > 0 ?
-            (Double(episodesWatched) / Double(totalEpisodes)) * 100 : 0  // Changed
-        
+        let progress = "\(episodesWatched)/\(totalEpisodes) episodes"
+        let percentage =
+            totalEpisodes > 0 ? (Double(episodesWatched) / Double(totalEpisodes)) * 100 : 0
+
         return AnimeStatusSummaryDTO(
             malId: self.id?.malId ?? 0,
             animeName: self.animeName,
