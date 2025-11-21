@@ -1,4 +1,3 @@
-// Sources/App/Services/AuthService.swift
 import Fluent
 import JWTKit
 import Vapor
@@ -6,10 +5,9 @@ import Vapor
 final class AuthService {
     private let userRepository: UserRepository
     private let jwtService: JWTService
-    
-    // Token expiration times
-    private let accessTokenExpiration: TimeInterval = 3600 // 1 hour
-    private let refreshTokenExpiration: TimeInterval = 2592000 // 30 days
+
+    private let accessTokenExpiration: TimeInterval = 3600
+    private let refreshTokenExpiration: TimeInterval = 2_592_000
 
     init(userRepository: UserRepository, jwtService: JWTService) {
         self.userRepository = userRepository
@@ -28,7 +26,9 @@ final class AuthService {
         return count == 0
     }
 
-    private func makeUsernameUnique(_ baseUsername: String, on db: any Database) async throws -> String {
+    private func makeUsernameUnique(_ baseUsername: String, on db: any Database) async throws
+        -> String
+    {
         var username = baseUsername
         var counter = 1
 
@@ -56,7 +56,8 @@ final class AuthService {
 
         let passwordHash = try Bcrypt.hash(password)
 
-        let user = User(email: email, username: uniqueUsername, passwordHash: passwordHash, roleId: 2)
+        let user = User(
+            email: email, username: uniqueUsername, passwordHash: passwordHash, roleId: 2)
         try await userRepository.create(user, on: req.db)
 
         try await sendVerificationEmail(to: email, on: req)
@@ -64,18 +65,19 @@ final class AuthService {
         return try await generateTokenPair(for: user, on: req)
     }
 
-    func login(identifier: String, password: String, on req: Request) async throws -> TokenResponse {
-        // Try to find user by email first, then by username
+    func login(identifier: String, password: String, on req: Request) async throws -> TokenResponse
+    {
+
         var user: User?
-        
+
         if identifier.contains("@") {
-            // It's an email
+
             user = try await userRepository.findByEmail(identifier, on: req.db)
         } else {
-            // It's a username
+
             user = try await userRepository.findByUsername(identifier, on: req.db)
         }
-        
+
         guard let foundUser = user else {
             throw Abort(.unauthorized, reason: "Invalid credentials")
         }
@@ -89,58 +91,62 @@ final class AuthService {
 
         return try await generateTokenPair(for: foundUser, on: req)
     }
-    
-    func refreshAccessToken(refreshToken: String, on req: Request) async throws -> RefreshTokenResponse {
-        // Find the refresh token in the database
-        guard let storedToken = try await RefreshToken.query(on: req.db)
-            .filter(\.$token == refreshToken)
-            .filter(\.$isRevoked == false)
-            .first() else {
+
+    func refreshAccessToken(refreshToken: String, on req: Request) async throws
+        -> RefreshTokenResponse
+    {
+
+        guard
+            let storedToken = try await RefreshToken.query(on: req.db)
+                .filter(\.$token == refreshToken)
+                .filter(\.$isRevoked == false)
+                .first()
+        else {
             throw Abort(.unauthorized, reason: "Invalid refresh token")
         }
-        
-        // Check if token is expired
+
         if let expiresAt = storedToken.expiresAt, expiresAt < Date() {
             throw Abort(.unauthorized, reason: "Refresh token expired")
         }
-        
-        // Get the user
-        guard let user = try await userRepository.findByEmail(storedToken.userEmail, on: req.db) else {
+
+        guard let user = try await userRepository.findByEmail(storedToken.userEmail, on: req.db)
+        else {
             throw Abort(.unauthorized, reason: "User not found")
         }
-        
-        // Generate new access token
-        let newAccessToken = try await jwtService.generateToken(for: user, expiration: accessTokenExpiration)
-        
-        // Generate new refresh token and revoke old one
+
+        let newAccessToken = try await jwtService.generateToken(
+            for: user, expiration: accessTokenExpiration)
+
         storedToken.isRevoked = true
         try await storedToken.save(on: req.db)
-        
+
         let newRefreshToken = try await createRefreshToken(for: user, on: req.db)
-        
+
         return RefreshTokenResponse(
             accessToken: newAccessToken,
             refreshToken: newRefreshToken.token,
             expiresAt: Date().addingTimeInterval(accessTokenExpiration)
         )
     }
-    
+
     func logout(refreshToken: String, on req: Request) async throws {
-        // Revoke the refresh token
+
         if let token = try await RefreshToken.query(on: req.db)
             .filter(\.$token == refreshToken)
-            .first() {
+            .first()
+        {
             token.isRevoked = true
             try await token.save(on: req.db)
         }
     }
-    
+
     private func generateTokenPair(for user: User, on req: Request) async throws -> TokenResponse {
         if user.$role.value == nil {
             try await user.$role.load(on: req.db)
         }
 
-        let accessToken = try await jwtService.generateToken(for: user, expiration: accessTokenExpiration)
+        let accessToken = try await jwtService.generateToken(
+            for: user, expiration: accessTokenExpiration)
         let refreshToken = try await createRefreshToken(for: user, on: req.db)
         let userDTO = try await getUserDTO(user: user, on: req)
 
@@ -151,17 +157,19 @@ final class AuthService {
             expiresAt: Date().addingTimeInterval(accessTokenExpiration)
         )
     }
-    
-    private func createRefreshToken(for user: User, on db: any Database) async throws -> RefreshToken {
+
+    private func createRefreshToken(for user: User, on db: any Database) async throws
+        -> RefreshToken
+    {
         let tokenString = [UInt8].random(count: 32).base64String()
         let expiresAt = Date().addingTimeInterval(refreshTokenExpiration)
-        
+
         let refreshToken = RefreshToken(
             token: tokenString,
             userEmail: user.id!,
             expiresAt: expiresAt
         )
-        
+
         try await refreshToken.save(on: db)
         return refreshToken
     }
@@ -173,14 +181,28 @@ final class AuthService {
         let verification = EmailVerification(email: email, code: code, expiresAt: expiresAt)
         try await verification.save(on: req.db)
 
-        req.logger.info("Verification code for \(email): \(code)")
+        // ✅ Fixed: Add the 'otp: code' parameter
+        if let emailService = req.application.storage[ResendEmailServiceKey.self] {
+            do {
+                try await emailService.sendOTPEmail(to: email, otp: code, client: req.client)
+                req.logger.info("📧 Verification email sent to \(email)")
+            } catch {
+                req.logger.error("❌ Failed to send email: \(error)")
+                throw Abort(.internalServerError, reason: "Failed to send verification email")
+            }
+        } else {
+            req.logger.warning(
+                "⚠️ EmailService not configured. Verification code for \(email): \(code)")
+        }
     }
 
     func verifyEmail(email: String, code: String, on req: Request) async throws -> Bool {
-        guard let verification = try await EmailVerification.query(on: req.db)
-            .filter(\.$email == email)
-            .filter(\.$code == code)
-            .first() else {
+        guard
+            let verification = try await EmailVerification.query(on: req.db)
+                .filter(\.$email == email)
+                .filter(\.$code == code)
+                .first()
+        else {
             throw Abort(.badRequest, reason: "Invalid verification code")
         }
 
@@ -200,7 +222,8 @@ final class AuthService {
         return true
     }
 
-    func updateUsername(email: String, newUsername: String, on req: Request) async throws -> UserDTO {
+    func updateUsername(email: String, newUsername: String, on req: Request) async throws -> UserDTO
+    {
         guard let user = try await userRepository.findByEmail(email, on: req.db) else {
             throw Abort(.notFound, reason: "User not found")
         }
@@ -241,7 +264,7 @@ extension Array where Element == UInt8 {
         _ = SecRandomCopyBytes(kSecRandomDefault, count, &bytes)
         return bytes
     }
-    
+
     func base64String() -> String {
         return Data(self).base64EncodedString()
     }

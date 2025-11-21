@@ -67,12 +67,11 @@ extension Request {
         return value
     }
 
-    var emailService: EmailService? {
-        return application.storage[EmailServiceKey.self]
+    var emailService: ResendEmailService? {
+        return application.storage[ResendEmailServiceKey.self]
     }
 
     var clientIP: String? {
-
         if let forwardedFor = headers.first(name: "X-Forwarded-For") {
             return forwardedFor.split(separator: ",").first.map(String.init)?.trimmingCharacters(
                 in: .whitespaces)
@@ -99,11 +98,11 @@ extension Request {
     }
 
     var isJSON: Bool {
-        return headers.contentType == .json  // Removed .mediaType
+        return headers.contentType == .json
     }
 
     var isFormData: Bool {
-        return headers.contentType == .formData  // Removed .mediaType
+        return headers.contentType == .formData
     }
 
     func validateAndDecode<T: Content & Validatable>(_ type: T.Type) throws -> T {
@@ -130,6 +129,7 @@ extension Request {
     }
 }
 
-struct EmailServiceKey: StorageKey {
-    typealias Value = EmailService
+// ✅ Keep the key definition here
+struct ResendEmailServiceKey: StorageKey {
+    typealias Value = ResendEmailService
 }

@@ -24,27 +24,21 @@ public func configure(_ app: Application) async throws {
 
     await configureJWT(app)
 
-    if let smtpHostname = Environment.get("SMTP_HOSTNAME"),
-        let smtpPortString = Environment.get("SMTP_PORT"),
-        let smtpPort = Int(smtpPortString),
-        let smtpUsername = Environment.get("SMTP_USERNAME"),
-        let smtpPassword = Environment.get("SMTP_PASSWORD"),
-        let smtpFromEmail = Environment.get("SMTP_FROM_EMAIL"),
-        let smtpFromName = Environment.get("SMTP_FROM_NAME")
+    // ✅ Configure Resend Email Service
+    if let resendKey = Environment.get("RESEND_API_KEY"),
+       let fromEmail = Environment.get("SMTP_FROM_EMAIL"),
+       let fromName = Environment.get("SMTP_FROM_NAME")
     {
-
-        let emailService = EmailService(
-            hostname: smtpHostname,
-            port: smtpPort,
-            username: smtpUsername,
-            password: smtpPassword,
-            fromEmail: smtpFromEmail,
-            fromName: smtpFromName
+        let emailService = ResendEmailService(
+            apiKey: resendKey,
+            fromEmail: fromEmail,
+            fromName: fromName
         )
 
-        app.storage[EmailServiceKey.self] = emailService
+        app.storage[ResendEmailServiceKey.self] = emailService
+        app.logger.info("✅ Resend EmailService configured successfully")
     } else {
-        app.logger.warning("SMTP not configured - email verification disabled")
+        app.logger.warning("⚠️ Resend not configured - email verification disabled")
     }
 
     configureMiddleware(app)
