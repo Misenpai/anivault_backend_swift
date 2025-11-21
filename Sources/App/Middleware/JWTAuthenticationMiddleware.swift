@@ -24,7 +24,7 @@ struct JWTAuthenticationMiddleware: AsyncMiddleware {
             request.auth.login(user)
 
             request.logger[metadataKey: "user_email"] = .string(user.id ?? "unknown")
-            request.logger[metadataKey: "user_role"] = .string("\(user.role.id ?? 0)")
+            request.logger[metadataKey: "user_role"] = .string("\(user.$role.id)")
 
             return try await next.respond(to: request)
 

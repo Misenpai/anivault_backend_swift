@@ -1,4 +1,3 @@
-// Sources/App/Controllers/AnimeController.swift
 import Fluent
 import Vapor
 
@@ -13,17 +12,15 @@ final class AnimeController: RouteCollection, @unchecked Sendable {
 
     func boot(routes: any RoutesBuilder) throws {
         let anime = routes.grouped("anime")
-
-        // Jikan proxy endpoints (public)
-        anime.get(":id", use: getAnimeById)
-        anime.get("search", use: searchAnime)
-        anime.get("season", "now", use: getCurrentSeason)
-        anime.get("season", "upcoming", use: getUpcomingSeason)
-        anime.get("season", ":year", ":season", use: getSeasonAnime)
-        anime.get("top", use: getTopAnime)
-
-        // User anime list endpoints (protected)
         let protected = anime.grouped(JWTAuthenticationMiddleware())
+
+        protected.get(":id", use: getAnimeById)
+        protected.get("search", use: searchAnime)
+        protected.get("season", "now", use: getCurrentSeason)
+        protected.get("season", "upcoming", use: getUpcomingSeason)
+        protected.get("season", ":year", ":season", use: getSeasonAnime)
+        protected.get("top", use: getTopAnime)
+
         let userAnime = protected.grouped("user")
         userAnime.post(use: addAnimeToList)
         userAnime.put(use: updateAnimeStatus)
@@ -31,8 +28,6 @@ final class AnimeController: RouteCollection, @unchecked Sendable {
         userAnime.get("status", ":status", use: getAnimeByStatus)
         userAnime.get(":malId", use: checkAnimeStatus)
     }
-
-    // MARK: - Jikan Proxy Endpoints
 
     private func getAnimeById(req: Request) async throws -> AnimeResponse {
         guard let id = req.parameters.get("id", as: Int.self) else {
@@ -82,8 +77,6 @@ final class AnimeController: RouteCollection, @unchecked Sendable {
 
         return try await jikanService.getTopAnime(page: page, limit: limit)
     }
-
-    // MARK: - User Anime List Endpoints
 
     private func addAnimeToList(req: Request) async throws -> UserAnimeStatus {
         let user = try req.auth.require(User.self)
