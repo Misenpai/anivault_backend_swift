@@ -3,15 +3,12 @@ import JWTKit
 import Vapor
 
 struct JWTAuthenticationMiddleware: AsyncMiddleware {
-    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response
-    {
-
+    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         guard let token = request.bearerToken else {
             throw Abort(.unauthorized, reason: "Missing or invalid authorization header")
         }
 
         do {
-
             let keys = request.jwtKeys
 
             let payload = try await keys.verify(token, as: JWTPayload.self)
@@ -27,7 +24,7 @@ struct JWTAuthenticationMiddleware: AsyncMiddleware {
             request.auth.login(user)
 
             request.logger[metadataKey: "user_email"] = .string(user.id ?? "unknown")
-            request.logger[metadataKey: "user_role"] = .string("\(user.role.id)")
+            request.logger[metadataKey: "user_role"] = .string("\(user.role.id ?? 0)")
 
             return try await next.respond(to: request)
 
@@ -42,16 +39,12 @@ struct JWTAuthenticationMiddleware: AsyncMiddleware {
 }
 
 struct OptionalJWTAuthenticationMiddleware: AsyncMiddleware {
-    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response
-    {
-
+    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response {
         guard let token = request.bearerToken else {
-
             return try await next.respond(to: request)
         }
 
         do {
-
             let keys = request.jwtKeys
 
             let payload = try await keys.verify(token, as: JWTPayload.self)
@@ -60,7 +53,6 @@ struct OptionalJWTAuthenticationMiddleware: AsyncMiddleware {
                 request.auth.login(user)
             }
         } catch {
-
             request.logger.debug("Optional JWT authentication failed: \(error)")
         }
 

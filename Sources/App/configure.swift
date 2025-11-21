@@ -7,13 +7,6 @@ import DotEnv
 public func configure(_ app: Application) async throws {
     if app.environment == .development {
         _ = DotEnv(withFile: ".env")
-        app.logger.info("✅ .env file loaded successfully")
-    }
-    if let dbURL = Environment.get("DATABASE_URL") {
-        let preview = String(dbURL.prefix(50))
-        app.logger.info("📊 DATABASE_URL loaded: \(preview)...")
-    } else {
-        app.logger.error("❌ DATABASE_URL not found in environment!")
     }
 
     app.http.server.configuration.hostname = Environment.get("HOST") ?? "0.0.0.0"
@@ -24,28 +17,28 @@ public func configure(_ app: Application) async throws {
 
     await configureJWT(app)
 
-    // ✅ Configure Resend Email Service
-    if let resendKey = Environment.get("RESEND_API_KEY"),
-       let fromEmail = Environment.get("SMTP_FROM_EMAIL"),
-       let fromName = Environment.get("SMTP_FROM_NAME")
-    {
-        let emailService = ResendEmailService(
-            apiKey: resendKey,
-            fromEmail: fromEmail,
+    if let smtpHost = Environment.get("SMTP_HOSTNAME"),
+       let smtpUser = Environment.get("SMTP_USERNAME"),
+       let smtpPass = Environment.get("SMTP_PASSWORD"),
+       let fromName = Environment.get("SMTP_FROM_NAME") {
+
+        // ✅ Use new struct initializer
+        let emailService = SMTPEmailService(
+            hostname: smtpHost,
+            email: smtpUser,
+            password: smtpPass,
             fromName: fromName
         )
+        app.storage[SMTPEmailServiceKey.self] = emailService
+        app.logger.info("SMTP EmailService configured successfully")
 
-        app.storage[ResendEmailServiceKey.self] = emailService
-        app.logger.info("✅ Resend EmailService configured successfully")
     } else {
-        app.logger.warning("⚠️ Resend not configured - email verification disabled")
+        app.logger.warning("SMTP not fully configured - email verification disabled")
     }
 
     configureMiddleware(app)
 
     try routes(app)
-
-    app.logger.info("Using Supabase-managed database schema")
 }
 
 private func configureJWT(_ app: Application) async {

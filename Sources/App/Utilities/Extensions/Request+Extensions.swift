@@ -67,8 +67,8 @@ extension Request {
         return value
     }
 
-    var emailService: ResendEmailService? {
-        return application.storage[ResendEmailServiceKey.self]
+    var emailService: SMTPEmailService? {
+        return application.storage[SMTPEmailServiceKey.self]
     }
 
     var clientIP: String? {
@@ -127,9 +127,4 @@ extension Request {
             ))
         return response
     }
-}
-
-// ✅ Keep the key definition here
-struct ResendEmailServiceKey: StorageKey {
-    typealias Value = ResendEmailService
 }

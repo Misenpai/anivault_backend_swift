@@ -67,14 +67,11 @@ final class AuthService {
 
     func login(identifier: String, password: String, on req: Request) async throws -> TokenResponse
     {
-
         var user: User?
 
         if identifier.contains("@") {
-
             user = try await userRepository.findByEmail(identifier, on: req.db)
         } else {
-
             user = try await userRepository.findByUsername(identifier, on: req.db)
         }
 
@@ -95,7 +92,6 @@ final class AuthService {
     func refreshAccessToken(refreshToken: String, on req: Request) async throws
         -> RefreshTokenResponse
     {
-
         guard
             let storedToken = try await RefreshToken.query(on: req.db)
                 .filter(\.$token == refreshToken)
@@ -130,7 +126,6 @@ final class AuthService {
     }
 
     func logout(refreshToken: String, on req: Request) async throws {
-
         if let token = try await RefreshToken.query(on: req.db)
             .filter(\.$token == refreshToken)
             .first()
@@ -181,18 +176,18 @@ final class AuthService {
         let verification = EmailVerification(email: email, code: code, expiresAt: expiresAt)
         try await verification.save(on: req.db)
 
-        // ✅ Fixed: Add the 'otp: code' parameter
-        if let emailService = req.application.storage[ResendEmailServiceKey.self] {
+        if let emailService = req.application.storage[SMTPEmailServiceKey.self] {
             do {
-                try await emailService.sendOTPEmail(to: email, otp: code, client: req.client)
-                req.logger.info("📧 Verification email sent to \(email)")
+                // ✅ Updated call to pass the event loop
+                try await emailService.sendOTPEmail(to: email, otp: code, on: req.eventLoop)
+                req.logger.info("Verification email sent to \(email)")
             } catch {
-                req.logger.error("❌ Failed to send email: \(error)")
+                req.logger.error("Failed to send email: \(error)")
                 throw Abort(.internalServerError, reason: "Failed to send verification email")
             }
         } else {
             req.logger.warning(
-                "⚠️ EmailService not configured. Verification code for \(email): \(code)")
+                "EmailService not configured. Verification code for \(email): \(code)")
         }
     }
 
@@ -255,17 +250,5 @@ final class AuthService {
             createdAt: user.createdAt,
             lastLogin: user.lastLogin
         )
-    }
-}
-
-extension Array where Element == UInt8 {
-    static func random(count: Int) -> [UInt8] {
-        var bytes = [UInt8](repeating: 0, count: count)
-        _ = SecRandomCopyBytes(kSecRandomDefault, count, &bytes)
-        return bytes
-    }
-
-    func base64String() -> String {
-        return Data(self).base64EncodedString()
     }
 }
