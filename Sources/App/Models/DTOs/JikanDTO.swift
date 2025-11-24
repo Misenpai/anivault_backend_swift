@@ -482,3 +482,132 @@ struct ExternalLinkDTO: Content, Sendable {
     let name: String
     let url: String
 }
+
+// MARK: - Genre DTOs
+
+struct GenreDTO: Content, Sendable {
+    let malId: Int
+    let name: String
+    let url: String
+    let count: Int
+
+    enum CodingKeys: String, CodingKey {
+        case malId = "mal_id"
+        case name
+        case url
+        case count
+    }
+}
+
+// MARK: - Random DTOs
+
+struct RandomMangaResponse: Content, Sendable {
+    let data: MangaDTO
+}
+
+struct RandomCharacterResponse: Content, Sendable {
+    let data: CharacterMetaDTO
+}
+
+struct RandomPersonResponse: Content, Sendable {
+    let data: PersonMetaDTO
+}
+
+struct RandomUserResponse: Content, Sendable {
+    let data: JikanUserProfileDTO
+}
+
+struct MangaDTO: Content, Sendable {
+    let malId: Int
+    let url: String
+    let images: ImagesDTO
+    let title: String
+    let type: String?
+    let chapters: Int?
+    let volumes: Int?
+    let status: String
+    let publishing: Bool
+    let score: Double?
+    let rank: Int?
+    let synopsis: String?
+
+    enum CodingKeys: String, CodingKey {
+        case malId = "mal_id"
+        case url
+        case images
+        case title
+        case type
+        case chapters
+        case volumes
+        case status
+        case publishing
+        case score
+        case rank
+        case synopsis
+    }
+}
+
+struct JikanUserProfileDTO: Content, Sendable {
+    let malId: Int?
+    let username: String
+    let url: String
+    let images: UserImagesDTO?
+    let lastOnline: String?
+    let gender: String?
+    let birthday: String?
+    let location: String?
+    let joined: String?
+
+    enum CodingKeys: String, CodingKey {
+        case malId = "mal_id"
+        case username
+        case url
+        case images
+        case lastOnline = "last_online"
+        case gender
+        case birthday
+        case location
+        case joined
+    }
+}
+
+// MARK: - Season List DTOs
+
+struct SeasonListDTO: Content, Sendable {
+    let year: Int
+    let seasons: [String]
+}
+
+// MARK: - Watch DTOs
+
+struct WatchEpisodeDTO: Content, Sendable {
+    let entry: AnimeMetaDTO
+    let episodes: [RecentEpisodeDTO]
+    let regionLocked: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case entry
+        case episodes
+        case regionLocked = "region_locked"
+    }
+}
+
+struct RecentEpisodeDTO: Content, Sendable {
+    let malId: String
+    let url: String
+    let title: String
+    let premium: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case malId = "mal_id"
+        case url
+        case title
+        case premium
+    }
+}
+
+struct WatchPromoDTO: Content, Sendable {
+    let title: String
+    let entry: AnimeMetaDTO
+    let trailer: TrailerDTO
+}

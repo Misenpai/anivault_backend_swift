@@ -172,4 +172,71 @@ final class JikanService: @unchecked Sendable {
         return try await getCachedOrFetch(
             "\(baseURL)/anime/\(id)/streaming", as: JikanListResponse<ExternalLinkDTO>.self)
     }
+
+    // MARK: - Genres
+
+    func getAnimeGenres(filter: String? = nil) async throws -> JikanListResponse<GenreDTO> {
+        var url = "\(baseURL)/genres/anime"
+        if let filter = filter {
+            url += "?filter=\(filter)"
+        }
+        return try await getCachedOrFetch(url, as: JikanListResponse<GenreDTO>.self)
+    }
+
+    // MARK: - Random
+
+    func getRandomAnime() async throws -> AnimeResponse {
+        return try await getCachedOrFetch("\(baseURL)/random/anime", as: AnimeResponse.self)
+    }
+
+    func getRandomManga() async throws -> RandomMangaResponse {
+        return try await getCachedOrFetch("\(baseURL)/random/manga", as: RandomMangaResponse.self)
+    }
+
+    func getRandomCharacters() async throws -> RandomCharacterResponse {
+        return try await getCachedOrFetch(
+            "\(baseURL)/random/characters", as: RandomCharacterResponse.self)
+    }
+
+    func getRandomPeople() async throws -> RandomPersonResponse {
+        return try await getCachedOrFetch("\(baseURL)/random/people", as: RandomPersonResponse.self)
+    }
+
+    func getRandomUsers() async throws -> RandomUserResponse {
+        return try await getCachedOrFetch("\(baseURL)/random/users", as: RandomUserResponse.self)
+    }
+
+    // MARK: - Recommendations
+
+    func getRecentAnimeRecommendations(page: Int) async throws -> JikanListResponse<
+        RecommendationDTO
+    > {
+        return try await getCachedOrFetch(
+            "\(baseURL)/recommendations/anime?page=\(page)",
+            as: JikanListResponse<RecommendationDTO>.self)
+    }
+
+    // MARK: - Seasons
+
+    func getSeasonsList() async throws -> JikanListResponse<SeasonListDTO> {
+        return try await getCachedOrFetch(
+            "\(baseURL)/seasons", as: JikanListResponse<SeasonListDTO>.self)
+    }
+
+    // MARK: - Watch
+
+    func getWatchRecentEpisodes() async throws -> JikanListResponse<WatchEpisodeDTO> {
+        return try await getCachedOrFetch(
+            "\(baseURL)/watch/episodes", as: JikanListResponse<WatchEpisodeDTO>.self)
+    }
+
+    func getWatchPopularEpisodes() async throws -> JikanListResponse<WatchEpisodeDTO> {
+        return try await getCachedOrFetch(
+            "\(baseURL)/watch/episodes/popular", as: JikanListResponse<WatchEpisodeDTO>.self)
+    }
+
+    func getWatchRecentPromos(page: Int) async throws -> JikanListResponse<WatchPromoDTO> {
+        return try await getCachedOrFetch(
+            "\(baseURL)/watch/promos?page=\(page)", as: JikanListResponse<WatchPromoDTO>.self)
+    }
 }

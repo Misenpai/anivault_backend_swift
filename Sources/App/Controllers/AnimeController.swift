@@ -40,12 +40,81 @@ final class AnimeController: RouteCollection, @unchecked Sendable {
         protected.get("season", ":year", ":season", use: getSeasonAnime)
         protected.get("top", use: getTopAnime)
 
+        // New Routes
+        protected.get("genres", "anime", use: getAnimeGenres)
+        protected.get("random", "anime", use: getRandomAnime)
+        protected.get("random", "manga", use: getRandomManga)
+        protected.get("random", "characters", use: getRandomCharacters)
+        protected.get("random", "people", use: getRandomPeople)
+        protected.get("random", "users", use: getRandomUsers)
+        protected.get("recommendations", "anime", use: getRecentAnimeRecommendations)
+        protected.get("seasons", use: getSeasonsList)
+        protected.get("watch", "episodes", use: getWatchRecentEpisodes)
+        protected.get("watch", "episodes", "popular", use: getWatchPopularEpisodes)
+        protected.get("watch", "promos", use: getWatchRecentPromos)
+
         let userAnime = protected.grouped("user")
         userAnime.post(use: addAnimeToList)
         userAnime.put(use: updateAnimeStatus)
         userAnime.delete(":malId", use: deleteAnimeFromList)
         userAnime.get("status", ":status", use: getAnimeByStatus)
         userAnime.get(":malId", use: checkAnimeStatus)
+    }
+
+    // ... existing methods ...
+
+    private func getAnimeGenres(req: Request) async throws -> JikanListResponse<GenreDTO> {
+        let filter = req.query[String.self, at: "filter"]
+        return try await jikanService.getAnimeGenres(filter: filter)
+    }
+
+    private func getRandomAnime(req: Request) async throws -> AnimeResponse {
+        return try await jikanService.getRandomAnime()
+    }
+
+    private func getRandomManga(req: Request) async throws -> RandomMangaResponse {
+        return try await jikanService.getRandomManga()
+    }
+
+    private func getRandomCharacters(req: Request) async throws -> RandomCharacterResponse {
+        return try await jikanService.getRandomCharacters()
+    }
+
+    private func getRandomPeople(req: Request) async throws -> RandomPersonResponse {
+        return try await jikanService.getRandomPeople()
+    }
+
+    private func getRandomUsers(req: Request) async throws -> RandomUserResponse {
+        return try await jikanService.getRandomUsers()
+    }
+
+    private func getRecentAnimeRecommendations(req: Request) async throws -> JikanListResponse<
+        RecommendationDTO
+    > {
+        let page = req.query[Int.self, at: "page"] ?? 1
+        return try await jikanService.getRecentAnimeRecommendations(page: page)
+    }
+
+    private func getSeasonsList(req: Request) async throws -> JikanListResponse<SeasonListDTO> {
+        return try await jikanService.getSeasonsList()
+    }
+
+    private func getWatchRecentEpisodes(req: Request) async throws -> JikanListResponse<
+        WatchEpisodeDTO
+    > {
+        return try await jikanService.getWatchRecentEpisodes()
+    }
+
+    private func getWatchPopularEpisodes(req: Request) async throws -> JikanListResponse<
+        WatchEpisodeDTO
+    > {
+        return try await jikanService.getWatchPopularEpisodes()
+    }
+
+    private func getWatchRecentPromos(req: Request) async throws -> JikanListResponse<WatchPromoDTO>
+    {
+        let page = req.query[Int.self, at: "page"] ?? 1
+        return try await jikanService.getWatchRecentPromos(page: page)
     }
 
     private func getAnimeFullById(req: Request) async throws -> AnimeResponse {
