@@ -3,8 +3,6 @@ import Vapor
 
 public func boot(_ app: Application) async throws {
 
-    app.logger.info("Starting application boot sequence...")
-
     try await verifyDatabaseConnection(app)
 
     try await cleanupExpiredData(app)
@@ -15,20 +13,16 @@ public func boot(_ app: Application) async throws {
         try await seedDevelopmentData(app)
     }
 
-    try await logStartupStats(app)
-
     registerShutdownHandler(app)
 
-    app.logger.info("Application boot completed successfully")
 }
 
 private func verifyDatabaseConnection(_ app: Application) async throws {
-    app.logger.info("🔌 Verifying database connection...")
 
     do {
 
         _ = try await User.query(on: app.db).count()
-        app.logger.info("Database connection verified")
+
     } catch {
         app.logger.error("Database connection failed: \(error)")
         throw error
@@ -36,7 +30,6 @@ private func verifyDatabaseConnection(_ app: Application) async throws {
 }
 
 private func cleanupExpiredData(_ app: Application) async throws {
-    app.logger.info("🧹 Cleaning up expired data...")
 
     let db = app.db
     let now = Date()
@@ -58,7 +51,7 @@ private func cleanupExpiredData(_ app: Application) async throws {
                     .filter(\.$isRevoked == true)
             }
             .delete()
-        app.logger.info("🗑️  Deleted \(expiredTokensCount) expired/revoked refresh tokens")
+
     }
 
     let expiredVerifications = try await EmailVerification.query(on: db)
@@ -70,7 +63,7 @@ private func cleanupExpiredData(_ app: Application) async throws {
         try await EmailVerification.query(on: db)
             .filter(\.$expiresAt < now)
             .delete()
-        app.logger.info("🗑️  Deleted \(expiredVerificationsCount) expired email verifications")
+
     }
 
     let oldVerifications = try await EmailVerification.query(on: db)
@@ -82,20 +75,17 @@ private func cleanupExpiredData(_ app: Application) async throws {
         try await EmailVerification.query(on: db)
             .filter(\.$createdAt < now.addingTimeInterval(-86400))
             .delete()
-        app.logger.info("🗑️  Deleted \(oldVerificationsCount) old email verifications")
+
     }
 
-    app.logger.info("Data cleanup completed")
 }
 
 private func scheduleCleanupTasks(_ app: Application) {
-    app.logger.info("⏰ Scheduling periodic cleanup tasks...")
 
     app.eventLoopGroup.next().scheduleRepeatedTask(
         initialDelay: .hours(1),
         delay: .hours(1)
     ) { task in
-        app.logger.info("⏰ Running scheduled cleanup...")
 
         Task {
             do {
@@ -119,7 +109,6 @@ private func scheduleCleanupTasks(_ app: Application) {
         }
     }
 
-    app.logger.info("Cleanup tasks scheduled")
 }
 
 private func checkTokenHealth(_ app: Application) async throws {
@@ -137,7 +126,6 @@ private func checkTokenHealth(_ app: Application) async throws {
 }
 
 private func seedDevelopmentData(_ app: Application) async throws {
-    app.logger.info("Seeding development data...")
 
     let db = app.db
 
@@ -157,7 +145,7 @@ private func seedDevelopmentData(_ app: Application) async throws {
         )
         admin.emailVerified = true
         try await admin.save(on: db)
-        app.logger.info("👤 Created admin user: admin@anivault.com / admin123")
+
     }
 
     let testUserExists =
@@ -175,10 +163,9 @@ private func seedDevelopmentData(_ app: Application) async throws {
         )
         testUser.emailVerified = true
         try await testUser.save(on: db)
-        app.logger.info("👤 Created test user: test@anivault.com / test123")
+
     }
 
-    app.logger.info("✅ Development data seeded")
 }
 
 private func logStartupStats(_ app: Application) async throws {
@@ -228,13 +215,11 @@ private func logStartupStats(_ app: Application) async throws {
 }
 
 private func registerShutdownHandler(_ app: Application) {
-    app.logger.info("🔧 Registering shutdown handler...")
 
     let signalQueue = DispatchQueue(label: "shutdown-handler")
 
     func handleShutdown(signal: Int32) {
         signalQueue.async {
-            app.logger.info("🛑 Received shutdown signal (\(signal))")
 
             Task {
                 do {
@@ -249,18 +234,13 @@ private func registerShutdownHandler(_ app: Application) {
     signal(SIGTERM, SIG_IGN)
     signal(SIGINT, SIG_IGN)
 
-    app.logger.info("✅ Shutdown handler registered")
 }
 
 extension Application {
     func performGracefulShutdown() async throws {
-        logger.info("🛑 Performing graceful shutdown...")
 
         try await cleanupExpiredData(self)
 
-        try await logShutdownStats(self)
-
-        logger.info("✅ Graceful shutdown completed")
     }
 }
 

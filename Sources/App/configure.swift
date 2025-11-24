@@ -1,8 +1,8 @@
+import DotEnv
 import Fluent
 import FluentPostgresDriver
 import JWTKit
 import Vapor
-import DotEnv
 
 public func configure(_ app: Application) async throws {
     if app.environment == .development {
@@ -18,9 +18,10 @@ public func configure(_ app: Application) async throws {
     await configureJWT(app)
 
     if let smtpHost = Environment.get("SMTP_HOSTNAME"),
-       let smtpUser = Environment.get("SMTP_USERNAME"),
-       let smtpPass = Environment.get("SMTP_PASSWORD"),
-       let fromName = Environment.get("SMTP_FROM_NAME") {
+        let smtpUser = Environment.get("SMTP_USERNAME"),
+        let smtpPass = Environment.get("SMTP_PASSWORD"),
+        let fromName = Environment.get("SMTP_FROM_NAME")
+    {
 
         // ✅ Use new struct initializer
         let emailService = SMTPEmailService(
@@ -30,7 +31,6 @@ public func configure(_ app: Application) async throws {
             fromName: fromName
         )
         app.storage[SMTPEmailServiceKey.self] = emailService
-        app.logger.info("SMTP EmailService configured successfully")
 
     } else {
         app.logger.warning("SMTP not fully configured - email verification disabled")
