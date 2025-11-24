@@ -16,7 +16,7 @@ func routes(_ app: Application) throws {
     let friendService = FriendService()
     let profileService = ProfileService(friendService: friendService)
     let animeService = AnimeService(animeRepository: animeRepository)
-    let jikanService = JikanService(client: app.client)
+    let jikanService = JikanService(client: app.client, cache: app.cache)
 
     let authController = AuthController(authService: authService)
     let userController = UserController(userService: UserService(userRepository: userRepository))

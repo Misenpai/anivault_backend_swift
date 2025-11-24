@@ -1,15 +1,15 @@
 import Vapor
 
-struct AnimeResponse: Content {
+struct AnimeResponse: Content, Sendable {
     let data: AnimeDTO
 }
 
-struct SeasonAnimeResponse: Content {
+struct SeasonAnimeResponse: Content, Sendable {
     let pagination: PaginationDTO
     let data: [AnimeDTO]
 }
 
-struct PaginationDTO: Content {
+struct PaginationDTO: Content, Sendable {
     let lastVisiblePage: Int
     let hasNextPage: Bool
     let currentPage: Int
@@ -21,7 +21,7 @@ struct PaginationDTO: Content {
     }
 }
 
-struct AnimeDTO: Content {
+struct AnimeDTO: Content, Sendable {
     let malId: Int
     let url: String?
     let images: ImagesDTO
@@ -58,12 +58,12 @@ struct AnimeDTO: Content {
     }
 }
 
-struct ImagesDTO: Content {
+struct ImagesDTO: Content, Sendable {
     let jpg: ImageUrlsDTO
     let webp: ImageUrlsDTO
 }
 
-struct ImageUrlsDTO: Content {
+struct ImageUrlsDTO: Content, Sendable {
     let imageUrl: String
     let smallImageUrl: String?
     let largeImageUrl: String?
@@ -75,13 +75,13 @@ struct ImageUrlsDTO: Content {
     }
 }
 
-struct AiredDTO: Content {
+struct AiredDTO: Content, Sendable {
     let from: String?
     let to: String?
     let string: String?
 }
 
-struct NamedResourceDTO: Content {
+struct NamedResourceDTO: Content, Sendable {
     let malId: Int
     let name: String
 

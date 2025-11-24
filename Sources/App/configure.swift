@@ -13,6 +13,7 @@ public func configure(_ app: Application) async throws {
     app.http.server.configuration.port = Environment.get("PORT").flatMap(Int.init) ?? 8080
 
     try DatabaseConfig.configure(app)
+    try RedisConfig.configure(app)
     app.migrations.add(CreateRefreshTokens())
 
     await configureJWT(app)
