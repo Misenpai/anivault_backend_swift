@@ -15,6 +15,25 @@ final class AnimeController: RouteCollection, @unchecked Sendable {
         let protected = anime.grouped(JWTAuthenticationMiddleware())
 
         protected.get(":id", use: getAnimeById)
+        protected.get(":id", "full", use: getAnimeFullById)
+        protected.get(":id", "characters", use: getAnimeCharacters)
+        protected.get(":id", "staff", use: getAnimeStaff)
+        protected.get(":id", "episodes", use: getAnimeEpisodes)
+        protected.get(":id", "episodes", ":episode", use: getAnimeEpisodeById)
+        protected.get(":id", "news", use: getAnimeNews)
+        protected.get(":id", "forum", use: getAnimeForum)
+        protected.get(":id", "videos", use: getAnimeVideos)
+        protected.get(":id", "videos", "episodes", use: getAnimeVideosEpisodes)
+        protected.get(":id", "pictures", use: getAnimePictures)
+        protected.get(":id", "statistics", use: getAnimeStatistics)
+        protected.get(":id", "moreinfo", use: getAnimeMoreInfo)
+        protected.get(":id", "recommendations", use: getAnimeRecommendations)
+        protected.get(":id", "userupdates", use: getAnimeUserUpdates)
+        protected.get(":id", "reviews", use: getAnimeReviews)
+        protected.get(":id", "relations", use: getAnimeRelations)
+        protected.get(":id", "themes", use: getAnimeThemes)
+        protected.get(":id", "external", use: getAnimeExternal)
+        protected.get(":id", "streaming", use: getAnimeStreaming)
         protected.get("search", use: searchAnime)
         protected.get("season", "now", use: getCurrentSeason)
         protected.get("season", "upcoming", use: getUpcomingSeason)
@@ -27,6 +46,156 @@ final class AnimeController: RouteCollection, @unchecked Sendable {
         userAnime.delete(":malId", use: deleteAnimeFromList)
         userAnime.get("status", ":status", use: getAnimeByStatus)
         userAnime.get(":malId", use: checkAnimeStatus)
+    }
+
+    private func getAnimeFullById(req: Request) async throws -> AnimeResponse {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeFullById(id)
+    }
+
+    private func getAnimeCharacters(req: Request) async throws -> JikanListResponse<CharacterDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeCharacters(id)
+    }
+
+    private func getAnimeStaff(req: Request) async throws -> JikanListResponse<StaffDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeStaff(id)
+    }
+
+    private func getAnimeEpisodes(req: Request) async throws -> JikanListResponse<EpisodeDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        let page = req.query[Int.self, at: "page"] ?? 1
+        return try await jikanService.getAnimeEpisodes(id, page: page)
+    }
+
+    private func getAnimeEpisodeById(req: Request) async throws -> JikanDataResponse<EpisodeDTO> {
+        guard let id = req.parameters.get("id", as: Int.self),
+            let episode = req.parameters.get("episode", as: Int.self)
+        else {
+            throw Abort(.badRequest, reason: "Invalid ID or episode number")
+        }
+        return try await jikanService.getAnimeEpisodeById(id, episode: episode)
+    }
+
+    private func getAnimeNews(req: Request) async throws -> JikanListResponse<NewsDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        let page = req.query[Int.self, at: "page"] ?? 1
+        return try await jikanService.getAnimeNews(id, page: page)
+    }
+
+    private func getAnimeForum(req: Request) async throws -> JikanListResponse<ForumTopicDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        let filter = req.query[String.self, at: "filter"] ?? "all"
+        return try await jikanService.getAnimeForum(id, filter: filter)
+    }
+
+    private func getAnimeVideos(req: Request) async throws -> JikanDataResponse<VideosDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeVideos(id)
+    }
+
+    private func getAnimeVideosEpisodes(req: Request) async throws -> JikanListResponse<
+        EpisodeVideoDTO
+    > {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        let page = req.query[Int.self, at: "page"] ?? 1
+        return try await jikanService.getAnimeVideosEpisodes(id, page: page)
+    }
+
+    private func getAnimePictures(req: Request) async throws -> JikanListResponse<PictureDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimePictures(id)
+    }
+
+    private func getAnimeStatistics(req: Request) async throws -> JikanDataResponse<StatisticsDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeStatistics(id)
+    }
+
+    private func getAnimeMoreInfo(req: Request) async throws -> JikanDataResponse<MoreInfoDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeMoreInfo(id)
+    }
+
+    private func getAnimeRecommendations(req: Request) async throws -> JikanListResponse<
+        RecommendationDTO
+    > {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeRecommendations(id)
+    }
+
+    private func getAnimeUserUpdates(req: Request) async throws -> JikanListResponse<UserUpdateDTO>
+    {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        let page = req.query[Int.self, at: "page"] ?? 1
+        return try await jikanService.getAnimeUserUpdates(id, page: page)
+    }
+
+    private func getAnimeReviews(req: Request) async throws -> JikanListResponse<ReviewDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        let page = req.query[Int.self, at: "page"] ?? 1
+        let preliminary = req.query[Bool.self, at: "preliminary"] ?? false
+        let spoilers = req.query[Bool.self, at: "spoilers"] ?? false
+        return try await jikanService.getAnimeReviews(
+            id, page: page, preliminary: preliminary, spoilers: spoilers)
+    }
+
+    private func getAnimeRelations(req: Request) async throws -> JikanListResponse<RelationDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeRelations(id)
+    }
+
+    private func getAnimeThemes(req: Request) async throws -> JikanDataResponse<ThemesDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeThemes(id)
+    }
+
+    private func getAnimeExternal(req: Request) async throws -> JikanListResponse<ExternalLinkDTO> {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeExternal(id)
+    }
+
+    private func getAnimeStreaming(req: Request) async throws -> JikanListResponse<ExternalLinkDTO>
+    {
+        guard let id = req.parameters.get("id", as: Int.self) else {
+            throw Abort(.badRequest, reason: "Invalid anime ID")
+        }
+        return try await jikanService.getAnimeStreaming(id)
     }
 
     private func getAnimeById(req: Request) async throws -> AnimeResponse {
