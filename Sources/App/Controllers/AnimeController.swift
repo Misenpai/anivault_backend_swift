@@ -40,7 +40,6 @@ final class AnimeController: RouteCollection, @unchecked Sendable {
         protected.get("season", ":year", ":season", use: getSeasonAnime)
         protected.get("top", use: getTopAnime)
 
-        // New Routes
         protected.get("genres", "anime", use: getAnimeGenres)
         protected.get("random", "anime", use: getRandomAnime)
         protected.get("random", "manga", use: getRandomManga)
@@ -60,8 +59,6 @@ final class AnimeController: RouteCollection, @unchecked Sendable {
         userAnime.get("status", ":status", use: getAnimeByStatus)
         userAnime.get(":malId", use: checkAnimeStatus)
     }
-
-    // ... existing methods ...
 
     private func getAnimeGenres(req: Request) async throws -> JikanListResponse<GenreDTO> {
         let filter = req.query[String.self, at: "filter"]

@@ -91,8 +91,6 @@ struct NamedResourceDTO: Content, Sendable {
     }
 }
 
-// MARK: - Generic Responses
-
 struct JikanListResponse<T: Content & Sendable>: Content, Sendable {
     let data: [T]
     let pagination: PaginationDTO?
@@ -101,8 +99,6 @@ struct JikanListResponse<T: Content & Sendable>: Content, Sendable {
 struct JikanDataResponse<T: Content & Sendable>: Content, Sendable {
     let data: T
 }
-
-// MARK: - Character DTOs
 
 struct CharacterDTO: Content, Sendable {
     let character: CharacterMetaDTO
@@ -155,14 +151,10 @@ struct PeopleImagesDTO: Content, Sendable {
     let jpg: ImageUrlsDTO
 }
 
-// MARK: - Staff DTOs
-
 struct StaffDTO: Content, Sendable {
     let person: PersonMetaDTO
     let positions: [String]
 }
-
-// MARK: - Episode DTOs
 
 struct EpisodeDTO: Content, Sendable {
     let malId: Int
@@ -190,8 +182,6 @@ struct EpisodeDTO: Content, Sendable {
     }
 }
 
-// MARK: - News DTOs
-
 struct NewsDTO: Content, Sendable {
     let malId: Int?
     let url: String?
@@ -217,8 +207,6 @@ struct NewsDTO: Content, Sendable {
         case excerpt
     }
 }
-
-// MARK: - Forum DTOs
 
 struct ForumTopicDTO: Content, Sendable {
     let malId: Int
@@ -255,8 +243,6 @@ struct ForumLastCommentDTO: Content, Sendable {
         case date
     }
 }
-
-// MARK: - Video DTOs
 
 struct VideosDTO: Content, Sendable {
     let promo: [PromoVideoDTO]
@@ -316,14 +302,10 @@ struct MusicVideoMetaDTO: Content, Sendable {
     let author: String?
 }
 
-// MARK: - Picture DTOs
-
 struct PictureDTO: Content, Sendable {
     let jpg: ImageUrlsDTO
     let webp: ImageUrlsDTO
 }
-
-// MARK: - Statistics DTOs
 
 struct StatisticsDTO: Content, Sendable {
     let watching: Int
@@ -351,13 +333,9 @@ struct ScoreStatsDTO: Content, Sendable {
     let percentage: Double
 }
 
-// MARK: - More Info DTOs
-
 struct MoreInfoDTO: Content, Sendable {
     let moreinfo: String?
 }
-
-// MARK: - Recommendation DTOs
 
 struct RecommendationDTO: Content, Sendable {
     let entry: AnimeMetaDTO
@@ -378,8 +356,6 @@ struct AnimeMetaDTO: Content, Sendable {
         case title
     }
 }
-
-// MARK: - User Update DTOs
 
 struct UserUpdateDTO: Content, Sendable {
     let user: UserMetaDTO
@@ -409,8 +385,6 @@ struct UserImagesDTO: Content, Sendable {
     let jpg: ImageUrlsDTO?
     let webp: ImageUrlsDTO?
 }
-
-// MARK: - Review DTOs
 
 struct ReviewDTO: Content, Sendable {
     let malId: Int
@@ -462,28 +436,20 @@ struct ReviewReactionsDTO: Content, Sendable {
     }
 }
 
-// MARK: - Relation DTOs
-
 struct RelationDTO: Content, Sendable {
     let relation: String
     let entry: [AnimeMetaDTO]
 }
-
-// MARK: - Theme DTOs
 
 struct ThemesDTO: Content, Sendable {
     let openings: [String]
     let endings: [String]
 }
 
-// MARK: - External DTOs
-
 struct ExternalLinkDTO: Content, Sendable {
     let name: String
     let url: String
 }
-
-// MARK: - Genre DTOs
 
 struct GenreDTO: Content, Sendable {
     let malId: Int
@@ -498,8 +464,6 @@ struct GenreDTO: Content, Sendable {
         case count
     }
 }
-
-// MARK: - Random DTOs
 
 struct RandomMangaResponse: Content, Sendable {
     let data: MangaDTO
@@ -571,14 +535,10 @@ struct JikanUserProfileDTO: Content, Sendable {
     }
 }
 
-// MARK: - Season List DTOs
-
 struct SeasonListDTO: Content, Sendable {
     let year: Int
     let seasons: [String]
 }
-
-// MARK: - Watch DTOs
 
 struct WatchEpisodeDTO: Content, Sendable {
     let entry: AnimeMetaDTO

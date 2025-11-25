@@ -3,9 +3,6 @@
 # Install Docker on your system to run and test
 # your Vapor app in a production-like environment.
 #
-# Note: This file is intended for testing and does not
-# implement best practices for a production deployment.
-#
 # Learn more: https://docs.docker.com/compose/reference/
 #
 #   Build images: docker compose build
@@ -17,56 +14,74 @@
 
 volumes:
   db_data:
+  redis_data:
 
-x-shared_environment: &shared_environment
-  LOG_LEVEL: ${LOG_LEVEL:-debug}
-  DATABASE_HOST: db
-  DATABASE_NAME: &db_name vapor_database
-  DATABASE_USERNAME: &db_username vapor_username
-  DATABASE_PASSWORD: &db_password vapor_password
-  
 services:
   app:
     image: anivault-backend:latest
     build:
       context: .
+    env_file:
+      - .env
     environment:
-      <<: *shared_environment
+      # Override REDIS_HOST to use the docker service name instead of localhost
+      REDIS_HOST: redis
+      # Ensure PORT matches the exposed port
+      PORT: 8080
+      # If DATABASE_URL is not in .env, fallback to local db service (optional)
+      # DB_HOST: ${DB_HOST:-db}
     depends_on:
       - db
+      - redis
     ports:
       - '8080:8080'
-    # user: '0' # uncomment to run as root for testing purposes even though Dockerfile defines 'vapor' user.
     command: ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8080"]
+
   migrate:
     image: anivault-backend:latest
     build:
       context: .
+    env_file:
+      - .env
     environment:
-      <<: *shared_environment
+      REDIS_HOST: redis
     depends_on:
       - db
+      - redis
     command: ["migrate", "--yes"]
     deploy:
       replicas: 0
+
   revert:
     image: anivault-backend:latest
     build:
       context: .
+    env_file:
+      - .env
     environment:
-      <<: *shared_environment
+      REDIS_HOST: redis
     depends_on:
       - db
+      - redis
     command: ["migrate", "--revert", "--yes"]
     deploy:
       replicas: 0
+
+  # Local DB service (optional if using Supabase)
   db:
-    image: postgres:18-alpine
+    image: postgres:16-alpine
     volumes:
-      - db_data:/var/lib/postgresql
+      - db_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: *db_username
-      POSTGRES_PASSWORD: *db_password
-      POSTGRES_DB: *db_name
+      POSTGRES_USER: ${DB_USER:-vapor_username}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-vapor_password}
+      POSTGRES_DB: ${DB_NAME:-vapor_database}
     ports:
       - '5432:5432'
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'

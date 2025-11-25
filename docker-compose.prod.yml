@@ -1,0 +1,47 @@
+# Docker Compose file for Production (Supabase + Redis)
+#
+# Use this file to run the pre-built image on another computer.
+# It excludes the local Postgres DB since you are using Supabase.
+#
+# Usage:
+# 1. Create a .env file with your secrets
+# 2. Run: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  app:
+    # Replace 'your-username' with your Docker Hub username
+    image: ${DOCKER_IMAGE:-anivault-backend:latest}
+    env_file:
+      - .env
+    environment:
+      REDIS_HOST: redis
+      PORT: 8080
+    depends_on:
+      - redis
+    ports:
+      - '8080:8080'
+    command: ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8080"]
+    restart: always
+
+  migrate:
+    image: ${DOCKER_IMAGE:-anivault-backend:latest}
+    env_file:
+      - .env
+    environment:
+      REDIS_HOST: redis
+    depends_on:
+      - redis
+    command: ["migrate", "--yes"]
+    deploy:
+      replicas: 0
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'
+    restart: always
+
+volumes:
+  redis_data:

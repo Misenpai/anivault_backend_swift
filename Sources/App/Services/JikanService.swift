@@ -173,8 +173,6 @@ final class JikanService: @unchecked Sendable {
             "\(baseURL)/anime/\(id)/streaming", as: JikanListResponse<ExternalLinkDTO>.self)
     }
 
-    // MARK: - Genres
-
     func getAnimeGenres(filter: String? = nil) async throws -> JikanListResponse<GenreDTO> {
         var url = "\(baseURL)/genres/anime"
         if let filter = filter {
@@ -182,8 +180,6 @@ final class JikanService: @unchecked Sendable {
         }
         return try await getCachedOrFetch(url, as: JikanListResponse<GenreDTO>.self)
     }
-
-    // MARK: - Random
 
     func getRandomAnime() async throws -> AnimeResponse {
         return try await getCachedOrFetch("\(baseURL)/random/anime", as: AnimeResponse.self)
@@ -206,8 +202,6 @@ final class JikanService: @unchecked Sendable {
         return try await getCachedOrFetch("\(baseURL)/random/users", as: RandomUserResponse.self)
     }
 
-    // MARK: - Recommendations
-
     func getRecentAnimeRecommendations(page: Int) async throws -> JikanListResponse<
         RecommendationDTO
     > {
@@ -216,14 +210,10 @@ final class JikanService: @unchecked Sendable {
             as: JikanListResponse<RecommendationDTO>.self)
     }
 
-    // MARK: - Seasons
-
     func getSeasonsList() async throws -> JikanListResponse<SeasonListDTO> {
         return try await getCachedOrFetch(
             "\(baseURL)/seasons", as: JikanListResponse<SeasonListDTO>.self)
     }
-
-    // MARK: - Watch
 
     func getWatchRecentEpisodes() async throws -> JikanListResponse<WatchEpisodeDTO> {
         return try await getCachedOrFetch(
