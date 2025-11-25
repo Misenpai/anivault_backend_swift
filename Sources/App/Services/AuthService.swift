@@ -83,6 +83,10 @@ final class AuthService {
             throw Abort(.unauthorized, reason: "Invalid credentials")
         }
 
+        guard foundUser.emailVerified else {
+            throw Abort(.forbidden, reason: "Email not verified")
+        }
+
         foundUser.lastLogin = Date()
         try await foundUser.save(on: req.db)
 
