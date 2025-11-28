@@ -175,10 +175,50 @@ final class AuthService {
 
     func sendVerificationEmail(to email: String, on req: Request) async throws {
         let code = String(format: "%06d", Int.random(in: 100000...999999))
-        let expiresAt = Date().addingTimeInterval(600)
+        let expiresAt = Date().addingTimeInterval(Constants.Email.Verification.codeExpiration)
 
-        let verification = EmailVerification(email: email, code: code, expiresAt: expiresAt)
-        try await verification.save(on: req.db)
+        // Check for existing verification
+        if let existingVerification = try await EmailVerification.query(on: req.db)
+            .filter(\.$email == email)
+            .first()
+        {
+            // Check cooldown
+            if let lastAttempt = existingVerification.lastAttemptAt,
+                Date().timeIntervalSince(lastAttempt) < Constants.Email.Verification.resendCooldown
+            {
+                throw Abort(
+                    .tooManyRequests,
+                    reason: "Please wait before requesting another code")
+            }
+
+            // Check max attempts
+            if existingVerification.attempts >= Constants.Email.Verification.maxResendAttempts {
+                // Optional: Reset attempts after a longer lockout period?
+                // For now, just block. User might need manual intervention or wait for expiration?
+                // Actually, let's reset attempts if the previous code expired significantly ago?
+                // Or just stick to the strict limit for now as per requirements.
+                // Let's allow reset if the record is very old?
+                // If expiresAt is in the past, maybe we should reset?
+                if let oldExpiresAt = existingVerification.expiresAt, oldExpiresAt < Date() {
+                    existingVerification.attempts = 0
+                } else {
+                    throw Abort(
+                        .tooManyRequests,
+                        reason: "Maximum resend attempts reached. Please try again later.")
+                }
+            }
+
+            existingVerification.code = code
+            existingVerification.expiresAt = expiresAt
+            existingVerification.attempts += 1
+            existingVerification.lastAttemptAt = Date()
+            try await existingVerification.save(on: req.db)
+        } else {
+            let verification = EmailVerification(email: email, code: code, expiresAt: expiresAt)
+            verification.attempts = 1
+            verification.lastAttemptAt = Date()
+            try await verification.save(on: req.db)
+        }
 
         if let emailService = req.application.storage[SMTPEmailServiceKey.self] {
             do {

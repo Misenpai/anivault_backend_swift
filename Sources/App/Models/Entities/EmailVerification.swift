@@ -13,6 +13,12 @@ final class EmailVerification: Model, Content, @unchecked Sendable {
     @Field(key: "code")
     var code: String
 
+    @Field(key: "attempts")
+    var attempts: Int
+
+    @Timestamp(key: "last_attempt_at", on: .none)
+    var lastAttemptAt: Date?
+
     @Timestamp(key: "expires_at", on: .none)
     var expiresAt: Date?
 
@@ -25,5 +31,6 @@ final class EmailVerification: Model, Content, @unchecked Sendable {
         self.email = email
         self.code = code
         self.expiresAt = expiresAt
+        self.attempts = 0
     }
 }

@@ -15,6 +15,7 @@ public func configure(_ app: Application) async throws {
     try DatabaseConfig.configure(app)
     try RedisConfig.configure(app)
     app.migrations.add(CreateRefreshTokens())
+    app.migrations.add(AddAttemptsToEmailVerifications())
 
     await configureJWT(app)
 
