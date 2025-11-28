@@ -10,10 +10,14 @@ func routes(_ app: Application) throws {
 
     let userRepository = UserRepository()
     let animeRepository = AnimeRepository()
+    let friendRepository = FriendRepository()
 
     let jwtService = JWTService()
-    let authService = AuthService(userRepository: userRepository, jwtService: jwtService)
-    let friendService = FriendService()
+    let emailService = app.storage[SMTPEmailServiceKey.self]
+
+    let authService = AuthService(
+        userRepository: userRepository, jwtService: jwtService, emailService: emailService)
+    let friendService = FriendService(friendRepository: friendRepository)
     let profileService = ProfileService(friendService: friendService)
     let animeService = AnimeService(animeRepository: animeRepository)
     let jikanService = JikanService(client: app.client, cache: app.cache)

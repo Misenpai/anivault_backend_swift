@@ -1,6 +1,6 @@
 import Vapor
 
-final class JikanService: @unchecked Sendable {
+struct JikanService: @unchecked Sendable {
     private let client: any Client
     private let cache: any Cache
     private let baseURL = "https://api.jikan.moe/v4"

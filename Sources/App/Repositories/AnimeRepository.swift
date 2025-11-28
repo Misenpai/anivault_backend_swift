@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-final class AnimeRepository {
+struct AnimeRepository {
 
     func findByUserAndMalId(userEmail: String, malId: Int, on db: any Database) async throws
         -> UserAnimeStatus?
@@ -31,7 +31,8 @@ final class AnimeRepository {
             .all()
     }
 
-    func findByUserAndStatus(userEmail: String, status: AnimeStatus, on db: any Database) async throws
+    func findByUserAndStatus(userEmail: String, status: AnimeStatus, on db: any Database)
+        async throws
         -> [UserAnimeStatus]
     {
         return try await UserAnimeStatus.query(on: db)
@@ -49,7 +50,8 @@ final class AnimeRepository {
         return count > 0
     }
 
-    func countByStatus(userEmail: String, status: AnimeStatus, on db: any Database) async throws -> Int
+    func countByStatus(userEmail: String, status: AnimeStatus, on db: any Database) async throws
+        -> Int
     {
         return try await UserAnimeStatus.query(on: db)
             .filter(\.$id.$user.$id == userEmail)
@@ -155,7 +157,9 @@ final class AnimeRepository {
             .delete()
     }
 
-    func bulkUpdateStatus(userEmail: String, malIds: [Int], newStatus: AnimeStatus, on db: any Database)
+    func bulkUpdateStatus(
+        userEmail: String, malIds: [Int], newStatus: AnimeStatus, on db: any Database
+    )
         async throws
     {
         let anime = try await UserAnimeStatus.query(on: db)
@@ -182,7 +186,9 @@ final class AnimeRepository {
         }
     }
 
-    func watchingByProgress(userEmail: String, on db: any Database) async throws -> [UserAnimeStatus] {
+    func watchingByProgress(userEmail: String, on db: any Database) async throws
+        -> [UserAnimeStatus]
+    {
         let watching = try await findByUserAndStatus(
             userEmail: userEmail, status: .watching, on: db)
         return watching.sorted { anime1, anime2 in

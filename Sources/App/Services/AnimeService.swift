@@ -2,7 +2,7 @@
 import Fluent
 import Vapor
 
-final class AnimeService: @unchecked Sendable {
+final actor AnimeService {
     private let animeRepository: AnimeRepository
 
     init(animeRepository: AnimeRepository) {

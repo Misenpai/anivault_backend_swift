@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-final class AnimeController: RouteCollection, @unchecked Sendable {
+struct AnimeController: RouteCollection {
     private let jikanService: JikanService
     private let animeService: AnimeService
 

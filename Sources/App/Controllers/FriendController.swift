@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-final class FriendController: RouteCollection, @unchecked Sendable {
+struct FriendController: RouteCollection {
     private let friendService: FriendService
 
     init(friendService: FriendService) {

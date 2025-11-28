@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-final class UserRepository {
+struct UserRepository {
 
     func findByEmail(_ email: String, on db: any Database) async throws -> User? {
         return try await User.find(email, on: db)

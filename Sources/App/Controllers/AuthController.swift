@@ -2,7 +2,7 @@ import Fluent
 import JWTKit
 import Vapor
 
-final class AuthController: RouteCollection, @unchecked Sendable {
+struct AuthController: RouteCollection {
     private let authService: AuthService
 
     init(authService: AuthService) {
@@ -33,7 +33,8 @@ final class AuthController: RouteCollection, @unchecked Sendable {
         return try await authService.signup(
             email: signupRequest.email,
             password: signupRequest.password,
-            on: req
+            on: req.db,
+            logger: req.logger
         )
     }
 
@@ -44,7 +45,7 @@ final class AuthController: RouteCollection, @unchecked Sendable {
         return try await authService.login(
             identifier: loginRequest.identifier,
             password: loginRequest.password,
-            on: req
+            on: req.db
         )
     }
 
@@ -52,19 +53,20 @@ final class AuthController: RouteCollection, @unchecked Sendable {
         let request = try req.content.decode(RefreshTokenRequest.self)
         return try await authService.refreshAccessToken(
             refreshToken: request.refreshToken,
-            on: req
+            on: req.db
         )
     }
 
     private func logout(req: Request) async throws -> HTTPStatus {
         let request = try req.content.decode(LogoutRequest.self)
-        try await authService.logout(refreshToken: request.refreshToken, on: req)
+        try await authService.logout(refreshToken: request.refreshToken, on: req.db)
         return .ok
     }
 
     private func sendVerificationCode(req: Request) async throws -> HTTPStatus {
         let request = try req.content.decode(VerifyEmailRequest.self)
-        try await authService.sendVerificationEmail(to: request.email, on: req)
+        try await authService.sendVerificationEmail(
+            to: request.email, on: req.db, logger: req.logger)
         return .ok
     }
 
@@ -73,7 +75,7 @@ final class AuthController: RouteCollection, @unchecked Sendable {
         let verified = try await authService.verifyEmail(
             email: request.email,
             code: request.code,
-            on: req
+            on: req.db
         )
         return verified ? .ok : .badRequest
     }
@@ -85,12 +87,12 @@ final class AuthController: RouteCollection, @unchecked Sendable {
         return try await authService.updateUsername(
             email: user.id!,
             newUsername: request.username,
-            on: req
+            on: req.db
         )
     }
 
     private func getCurrentUser(req: Request) async throws -> UserDTO {
         let user = try req.auth.require(User.self)
-        return try await authService.getUserDTO(user: user, on: req)
+        return try await authService.getUserDTO(user: user)
     }
 }

@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-final class UserController: RouteCollection, @unchecked Sendable {
+struct UserController: RouteCollection {
     private let userService: UserService
 
     init(userService: UserService) {

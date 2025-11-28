@@ -1,28 +1,30 @@
-// Sources/App/Services/ProfileService.swift
-import Vapor
 import Fluent
 import SQLKit
+// Sources/App/Services/ProfileService.swift
+import Vapor
 
-final class ProfileService {
+actor ProfileService {
     private let friendService: FriendService
-    
+
     init(friendService: FriendService) {
         self.friendService = friendService
     }
-    
+
     func getPublicProfile(
         username: String,
         viewerEmail: String?,
         on db: any Database
     ) async throws -> PublicProfileDTO {
-        guard let user = try await User.query(on: db)
-            .filter(\.$username == username)
-            .first() else {
+        guard
+            let user = try await User.query(on: db)
+                .filter(\.$username == username)
+                .first()
+        else {
             throw Abort(.notFound, reason: "User not found")
         }
-        
+
         let stats = try await getAnimeStats(userEmail: user.id!, on: db)
-        
+
         var isFriend = false
         if let viewerEmail = viewerEmail {
             isFriend = try await friendService.areFriends(
@@ -31,19 +33,19 @@ final class ProfileService {
                 on: db
             )
         }
-        
+
         return PublicProfileDTO(
             username: user.username,
             animeStats: stats,
             isFriend: isFriend
         )
     }
-    
+
     func getAnimeStats(userEmail: String, on db: any Database) async throws -> AnimeStatsDTO {
         guard let sql = db as? any SQLDatabase else {
             throw Abort(.internalServerError, reason: "Database doesn't support SQL")
         }
-        
+
         struct StatsRow: Decodable {
             let totalAnimeEntries: Int?
             let completedCount: Int?
@@ -52,7 +54,7 @@ final class ProfileService {
             let droppedCount: Int?
             let onHoldCount: Int?
             let totalEpisodesWatched: Int?
-            
+
             enum CodingKeys: String, CodingKey {
                 case totalAnimeEntries = "total_anime_entries"
                 case completedCount = "completed_count"
@@ -63,11 +65,13 @@ final class ProfileService {
                 case totalEpisodesWatched = "total_episodes_watched"
             }
         }
-        
-        let result = try await sql.raw("""
-            SELECT * FROM v_user_anime_stats WHERE user_email = \(bind: userEmail)
-        """).first(decoding: StatsRow.self)
-        
+
+        let result = try await sql.raw(
+            """
+                SELECT * FROM v_user_anime_stats WHERE user_email = \(bind: userEmail)
+            """
+        ).first(decoding: StatsRow.self)
+
         return AnimeStatsDTO(
             watching: result?.currentlyWatching ?? 0,
             completed: result?.completedCount ?? 0,

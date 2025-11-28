@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-final class ProfileController: RouteCollection, @unchecked Sendable {
+struct ProfileController: RouteCollection {
     private let profileService: ProfileService
 
     init(profileService: ProfileService) {
